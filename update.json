@@ -1,0 +1,10 @@
+{
+  "latest_version": "1.0.0",
+  "download_url": "",
+  "mandatory": false,
+  "release_notes": [
+    "当前版本为匯鹰黄金 AI 盯盘中枢 1.0.0。",
+    "后续发布新版时，把 latest_version 改为新版号，并填写新版安装包 download_url。",
+    "客户端发现新版后，会提示用户打开下载地址并覆盖安装。"
+  ]
+}
