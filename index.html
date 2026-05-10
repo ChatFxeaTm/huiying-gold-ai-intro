@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>匯鹰黄金 AI 盯盘中枢</title>
+  <meta name="description" content="匯鹰黄金 AI 盯盘中枢：读取 MT5 黄金行情，生成多周期图表、AI 分析报告、信号评分与复盘追踪。">
+  <style>
+    :root {
+      --bg: #08090a;
+      --panel: #111417;
+      --panel-2: #171b20;
+      --text: #f4efe4;
+      --muted: #a8adad;
+      --gold: #d6a63f;
+      --gold-2: #ffe3a0;
+      --line: rgba(255, 227, 160, .18);
+      --blue: #69a7ff;
+      --danger: #ff7a7a;
+      --green: #74d99f;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 76% 8%, rgba(214, 166, 63, .22), transparent 28rem),
+        radial-gradient(circle at 8% 28%, rgba(105, 167, 255, .12), transparent 26rem),
+        linear-gradient(135deg, #070808 0%, #101114 48%, #050505 100%);
+      color: var(--text);
+      font-family: "Microsoft YaHei UI", "Microsoft YaHei", "Segoe UI", sans-serif;
+      line-height: 1.65;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+      background-size: 56px 56px;
+      mask-image: linear-gradient(to bottom, rgba(0,0,0,.85), transparent 78%);
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .shell {
+      width: min(1180px, calc(100% - 36px));
+      margin: 0 auto;
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 24px 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      letter-spacing: .02em;
+    }
+
+    .brand img {
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      object-fit: cover;
+      box-shadow: 0 0 0 1px rgba(255, 227, 160, .28), 0 18px 50px rgba(214, 166, 63, .2);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 18px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap: 44px;
+      align-items: center;
+      min-height: calc(100vh - 96px);
+      padding: 18px 0 84px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--gold-2);
+      background: rgba(255, 227, 160, .06);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    h1 {
+      margin: 24px 0 18px;
+      font-size: clamp(42px, 7vw, 82px);
+      line-height: 1.04;
+      letter-spacing: 0;
+    }
+
+    .hero-copy {
+      max-width: 720px;
+      color: #c8c9c5;
+      font-size: 18px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-top: 32px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 46px;
+      padding: 0 18px;
+      border-radius: 8px;
+      font-weight: 800;
+      border: 1px solid var(--line);
+    }
+
+    .btn.primary {
+      background: linear-gradient(135deg, var(--gold-2), var(--gold));
+      color: #15100a;
+      box-shadow: 0 18px 46px rgba(214, 166, 63, .28);
+    }
+
+    .btn.ghost {
+      background: rgba(255,255,255,.04);
+      color: var(--text);
+    }
+
+    .terminal {
+      position: relative;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(23,27,32,.92), rgba(10,12,14,.92));
+      box-shadow: 0 32px 120px rgba(0,0,0,.45);
+      overflow: hidden;
+    }
+
+    .terminal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .dots { display: flex; gap: 7px; }
+    .dots span { width: 9px; height: 9px; border-radius: 50%; background: #3b424b; }
+    .dots span:nth-child(2) { background: #6f7681; }
+    .dots span:nth-child(3) { background: var(--gold); }
+
+    .terminal-body {
+      padding: 20px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .metric-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .metric, .report {
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.035);
+      border-radius: 10px;
+      padding: 14px;
+    }
+
+    .metric small, .report small {
+      display: block;
+      color: var(--muted);
+      margin-bottom: 6px;
+      font-size: 12px;
+    }
+
+    .metric strong {
+      font-size: 22px;
+      color: var(--gold-2);
+    }
+
+    .report h3 {
+      margin: 0 0 10px;
+      font-size: 17px;
+    }
+
+    .report p {
+      margin: 0;
+      color: #ccd0cf;
+      font-size: 14px;
+    }
+
+    section {
+      padding: 76px 0;
+      border-top: 1px solid rgba(255,255,255,.07);
+    }
+
+    .section-title {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 26px;
+    }
+
+    .section-title h2 {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 46px);
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+
+    .section-title p {
+      max-width: 520px;
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .card {
+      min-height: 188px;
+      padding: 22px;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.025));
+    }
+
+    .card b {
+      display: block;
+      margin-bottom: 12px;
+      color: var(--gold-2);
+      font-size: 18px;
+    }
+
+    .card p {
+      margin: 0;
+      color: #c5c8c7;
+      font-size: 14px;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+    }
+
+    .step {
+      min-height: 130px;
+      padding: 16px;
+      border: 1px solid rgba(214,166,63,.22);
+      border-radius: 12px;
+      background: rgba(214,166,63,.055);
+    }
+
+    .step span {
+      color: var(--gold);
+      font-weight: 900;
+    }
+
+    .risk {
+      border-color: rgba(255,122,122,.35);
+      background: rgba(255,122,122,.08);
+    }
+
+    .footer {
+      padding: 44px 0 56px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .contact {
+      color: var(--gold-2);
+      font-weight: 800;
+    }
+
+    @media (max-width: 920px) {
+      .hero, .grid, .flow {
+        grid-template-columns: 1fr;
+      }
+      .section-title {
+        display: block;
+      }
+      .metric-row {
+        grid-template-columns: 1fr;
+      }
+      .nav-links {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <nav class="nav">
+      <div class="brand">
+        <img src="assets/logo.png" alt="匯鹰黄金 AI 盯盘中枢 LOGO">
+        <span>匯鹰黄金 AI 盯盘中枢</span>
+      </div>
+      <div class="nav-links">
+        <a href="#features">能力</a>
+        <a href="#workflow">流程</a>
+        <a href="#risk">风险</a>
+      </div>
+    </nav>
+
+    <section class="hero">
+      <div>
+        <div class="eyebrow">MT5 黄金行情 · AI 多周期盯盘 · 中文交易员报告</div>
+        <h1>让黄金盯盘从“盯屏幕”变成“看结论”。</h1>
+        <p class="hero-copy">
+          匯鹰黄金 AI 盯盘中枢读取 MT5 的 XAUUSD 行情，自动生成 M5 / M15 / H1 图表、EMA结构、信号评分、风险判断和中文分析报告。它不自动下单，不承诺盈利，只做一件事：把盘面结构讲清楚。
+        </p>
+        <div class="actions">
+          <a class="btn primary" href="#workflow">查看工作流程</a>
+          <a class="btn ghost" href="#risk">阅读风险提示</a>
+        </div>
+      </div>
+
+      <div class="terminal" aria-label="软件界面示意">
+        <div class="terminal-head">
+          <div class="dots"><span></span><span></span><span></span></div>
+          <span>AI Watch Terminal</span>
+        </div>
+        <div class="terminal-body">
+          <div class="metric-row">
+            <div class="metric"><small>当前价格</small><strong>4715.20</strong></div>
+            <div class="metric"><small>综合评分</small><strong>68/100</strong></div>
+            <div class="metric"><small>交易状态</small><strong>等回踩</strong></div>
+          </div>
+          <div class="report">
+            <small>AI 分析摘要</small>
+            <h3>H1 多头结构未破，M15 动能放缓，M5 不宜追高。</h3>
+            <p>当前价格在 EMA60 上方但距离压力区偏近，若回踩不破并重新放量，可偏多观察；若跌回均线下方并出现长上影，防假突破。</p>
+          </div>
+          <div class="metric-row">
+            <div class="metric"><small>趋势一致性</small><strong>72</strong></div>
+            <div class="metric"><small>波动风险</small><strong>41</strong></div>
+            <div class="metric"><small>信号等级</small><strong>B</strong></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="features">
+      <div class="section-title">
+        <h2>不是喊单工具，是黄金盘面解释器。</h2>
+        <p>第一版重点放在分析、推送、复盘和交付稳定性，把自动下单这类高责任功能先放在后面。</p>
+      </div>
+      <div class="grid">
+        <div class="card"><b>自动读取 MT5 行情</b><p>读取 XAUUSD 的 M5、M15、H1 K线，保存 JSON，生成本地行情记录。</p></div>
+        <div class="card"><b>三周期图表</b><p>自动生成蜡烛图、EMA60、EMA144 和当前价线，双击可按屏幕大小预览，滚轮切换周期。</p></div>
+        <div class="card"><b>AI 中文报告</b><p>按固定结构输出趋势、支撑压力、入场观察、风险提示、结论和量化评分。</p></div>
+        <div class="card"><b>信号评分引擎</b><p>先由程序计算趋势一致性、动能、波动风险和交易适合度，再交给 AI 解读。</p></div>
+        <div class="card"><b>企业微信推送</b><p>支持企业微信机器人文本或 Markdown 推送，Webhook 默认关闭，避免误发。</p></div>
+        <div class="card"><b>本地授权交付</b><p>离线机器码授权，区分客户版和作者自用版，适合封测和早期销售。</p></div>
+      </div>
+    </section>
+
+    <section id="workflow">
+      <div class="section-title">
+        <h2>一轮分析，只做清晰的闭环。</h2>
+        <p>行情读取、图表、评分、AI报告、推送、追踪验证，全部围绕“这份分析有没有参考价值”。</p>
+      </div>
+      <div class="flow">
+        <div class="step"><span>01</span><br>连接 MT5，读取黄金行情</div>
+        <div class="step"><span>02</span><br>生成 M5 / M15 / H1 图表</div>
+        <div class="step"><span>03</span><br>计算客观信号评分</div>
+        <div class="step"><span>04</span><br>输出中文 AI 交易员报告</div>
+        <div class="step"><span>05</span><br>记录并追踪后续市场结果</div>
+      </div>
+    </section>
+
+    <section id="risk">
+      <div class="section-title">
+        <h2>风险写在前面。</h2>
+        <p>交易软件如果只讲机会不讲风险，就不适合交给真实用户。匯鹰黄金 AI 盯盘中枢默认允许“观望”，并明确区分分析辅助与交易决策。</p>
+      </div>
+      <div class="grid">
+        <div class="card risk"><b>不自动下单</b><p>软件只做行情分析和辅助判断，不替用户执行交易。</p></div>
+        <div class="card risk"><b>不承诺收益</b><p>任何信号都可能失效，历史表现不代表未来结果。</p></div>
+        <div class="card risk"><b>用户自行决策</b><p>黄金、外汇和差价合约具有高风险，交易结果由用户自行承担。</p></div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div>作者联系方式：<span class="contact">微信 FXEATM</span> · <span class="contact">QQ 563223167</span></div>
+      <div>匯鹰黄金 AI 盯盘中枢仅作行情分析辅助，不构成投资建议。</div>
+    </footer>
+  </main>
+</body>
+</html>
