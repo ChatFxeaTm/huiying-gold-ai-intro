@@ -22,6 +22,11 @@
 
     * { box-sizing: border-box; }
 
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 96px;
+    }
+
     body {
       margin: 0;
       background:
@@ -52,11 +57,21 @@
       margin: 0 auto;
     }
 
+    .nav-shell {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      width: 100%;
+      backdrop-filter: blur(18px);
+      background: rgba(8, 9, 10, .76);
+      border-bottom: 1px solid rgba(255, 227, 160, .12);
+    }
+
     .nav {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 24px 0;
+      padding: 14px 0;
     }
 
     .brand {
@@ -77,9 +92,29 @@
 
     .nav-links {
       display: flex;
-      gap: 18px;
-      color: var(--muted);
+      align-items: center;
+      gap: 10px;
       font-size: 14px;
+    }
+
+    .nav-links a {
+      color: #d8d0bc;
+      padding: 8px 11px;
+      border: 1px solid transparent;
+      border-radius: 999px;
+      transition: .18s ease;
+    }
+
+    .nav-links a:hover {
+      color: var(--gold-2);
+      border-color: rgba(255, 227, 160, .22);
+      background: rgba(255, 227, 160, .08);
+    }
+
+    .nav-links .top-link {
+      color: #15100a;
+      background: linear-gradient(135deg, var(--gold-2), var(--gold));
+      font-weight: 800;
     }
 
     .hero {
@@ -87,7 +122,7 @@
       grid-template-columns: 1.05fr .95fr;
       gap: 44px;
       align-items: center;
-      min-height: calc(100vh - 96px);
+      min-height: calc(100vh - 76px);
       padding: 18px 0 84px;
     }
 
@@ -310,15 +345,22 @@
       .metric-row {
         grid-template-columns: 1fr;
       }
+      .nav {
+        align-items: flex-start;
+        gap: 12px;
+        flex-direction: column;
+      }
       .nav-links {
-        display: none;
+        width: 100%;
+        overflow-x: auto;
+        padding-bottom: 2px;
       }
     }
   </style>
 </head>
 <body>
-  <main class="shell">
-    <nav class="nav">
+  <header class="nav-shell">
+    <nav class="nav shell">
       <div class="brand">
         <img src="assets/logo.png" alt="匯鹰黄金 AI 盯盘中枢 LOGO">
         <span>匯鹰黄金 AI 盯盘中枢</span>
@@ -327,8 +369,12 @@
         <a href="#features">能力</a>
         <a href="#workflow">流程</a>
         <a href="#risk">风险</a>
+        <a class="top-link" href="#top">顶部</a>
       </div>
     </nav>
+  </header>
+
+  <main id="top" class="shell">
 
     <section class="hero">
       <div>
