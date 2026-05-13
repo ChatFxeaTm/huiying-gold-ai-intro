@@ -4,45 +4,49 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>双向趋势 EA | 汇交易策略研发中心</title>
-  <meta name="description" content="汇交易策略研发中心双向趋势EA介绍：现价上方挂多、现价下方挂空、突破触发、动态追踪、仓位控制与风险提醒。">
+  <meta name="description" content="汇交易策略研发中心双向趋势EA介绍：双向突破挂单、动态追踪、仓位控制、盈利保护与风险提示。">
   <style>
     :root {
-      --bg: #f4f1e8;
-      --ink: #151817;
-      --muted: #606863;
-      --dark: #111513;
-      --cream: #fffaf0;
-      --gold: #d6a23d;
-      --teal: #1f9a8a;
-      --red: #c94d45;
-      --green: #2f9c5a;
-      --line: rgba(21, 24, 23, .16);
+      --ink: #131715;
+      --muted: #667069;
+      --paper: #f5f0e4;
+      --surface: #fffaf0;
+      --dark: #101513;
+      --dark-2: #19201d;
+      --line: rgba(19, 23, 21, .14);
+      --gold: #d8a33f;
+      --mint: #2aa68f;
+      --green: #3fad6d;
+      --red: #d35b50;
+      --blue: #5475d8;
     }
+
     * { box-sizing: border-box; }
     html { scroll-behavior: smooth; scroll-padding-top: 84px; }
     body {
       margin: 0;
       color: var(--ink);
-      background: var(--bg);
+      background: var(--paper);
       font-family: "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", sans-serif;
-      line-height: 1.72;
+      line-height: 1.68;
     }
     a { color: inherit; text-decoration: none; }
     .shell { width: min(1160px, calc(100% - 40px)); margin: 0 auto; }
+
     .topbar {
       position: sticky;
       top: 0;
-      z-index: 10;
-      background: rgba(244, 241, 232, .93);
+      z-index: 20;
       border-bottom: 1px solid var(--line);
-      backdrop-filter: blur(16px);
+      background: rgba(245, 240, 228, .9);
+      backdrop-filter: blur(18px);
     }
     .nav {
       min-height: 72px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 18px;
+      gap: 20px;
     }
     .brand { display: flex; align-items: center; gap: 12px; font-weight: 900; }
     .brand-mark {
@@ -50,93 +54,216 @@
       height: 38px;
       display: grid;
       place-items: center;
-      color: var(--cream);
+      border-radius: 8px;
+      color: var(--surface);
       background: var(--dark);
       border: 2px solid var(--gold);
-      border-radius: 8px;
     }
-    .nav-links { display: flex; gap: 8px; overflow-x: auto; font-size: 14px; }
+    .nav-links { display: flex; gap: 8px; overflow-x: auto; color: #3e4842; font-size: 14px; }
     .nav-links a { padding: 8px 10px; border-radius: 7px; white-space: nowrap; }
-    .nav-links a:hover { background: rgba(255,250,240,.75); }
+    .nav-links a:hover { background: rgba(255, 250, 240, .78); }
+
     .hero {
-      color: var(--cream);
-      background:
-        linear-gradient(120deg, rgba(17,21,19,.98), rgba(17,21,19,.72) 52%, rgba(31,154,138,.46)),
-        repeating-linear-gradient(90deg, rgba(255,255,255,.08) 0 1px, transparent 1px 68px),
-        repeating-linear-gradient(0deg, rgba(255,255,255,.06) 0 1px, transparent 1px 54px),
-        #111513;
+      position: relative;
+      min-height: calc(100vh - 72px);
       overflow: hidden;
+      color: var(--surface);
+      background:
+        linear-gradient(115deg, rgba(16,21,19,.98), rgba(16,21,19,.86) 52%, rgba(42,166,143,.48)),
+        repeating-linear-gradient(90deg, rgba(255,255,255,.07) 0 1px, transparent 1px 68px),
+        repeating-linear-gradient(0deg, rgba(255,255,255,.055) 0 1px, transparent 1px 56px),
+        #101513;
     }
-    .hero-inner { padding: 78px 0 64px; max-width: 880px; }
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(148deg, transparent 0 51%, rgba(216,163,63,.34) 51% 52%, transparent 52% 100%),
+        linear-gradient(28deg, transparent 0 61%, rgba(211,91,80,.28) 61% 62%, transparent 62% 100%),
+        radial-gradient(circle at 82% 18%, rgba(84,117,216,.28), transparent 20rem);
+      pointer-events: none;
+    }
+    .hero-inner {
+      position: relative;
+      z-index: 1;
+      min-height: calc(100vh - 72px);
+      display: grid;
+      align-content: center;
+      padding: 72px 0 90px;
+    }
     .eyebrow {
       display: inline-flex;
+      width: fit-content;
       padding: 8px 12px;
       border: 1px solid rgba(255,250,240,.25);
       border-radius: 7px;
-      color: #f0d089;
+      color: #f1d28e;
       background: rgba(255,250,240,.06);
       font-size: 13px;
       font-weight: 900;
     }
-    h1 { margin: 24px 0 18px; max-width: 800px; font-size: clamp(38px, 6vw, 68px); line-height: 1.08; letter-spacing: 0; }
-    .hero p { margin: 0; max-width: 780px; color: rgba(255,250,240,.86); font-size: 18px; }
-    .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
-    .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 46px; padding: 0 18px; border-radius: 7px; font-weight: 900; border: 1px solid rgba(255,250,240,.28); }
-    .btn.primary { color: var(--ink); background: #f0d089; }
-    .btn.ghost { color: var(--cream); background: rgba(255,250,240,.08); }
-    .strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: rgba(255,250,240,.16); border-top: 1px solid rgba(255,250,240,.18); }
-    .ticker { min-height: 96px; padding: 18px 20px; background: rgba(17,21,19,.86); }
-    .ticker small { display: block; color: rgba(255,250,240,.62); margin-bottom: 6px; }
-    .ticker strong { font-size: 22px; }
+    h1 {
+      max-width: 830px;
+      margin: 24px 0 18px;
+      font-size: clamp(42px, 7vw, 82px);
+      line-height: 1.04;
+      letter-spacing: 0;
+    }
+    .lead {
+      max-width: 760px;
+      margin: 0;
+      color: rgba(255,250,240,.84);
+      font-size: 18px;
+    }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 46px;
+      padding: 0 18px;
+      border-radius: 7px;
+      border: 1px solid rgba(255,250,240,.28);
+      font-weight: 900;
+    }
+    .btn.primary { color: var(--ink); background: #f1d28e; }
+    .btn.ghost { color: var(--surface); background: rgba(255,250,240,.08); }
+    .dashboard {
+      position: absolute;
+      right: max(24px, calc((100vw - 1160px) / 2));
+      bottom: 42px;
+      width: min(420px, calc(100% - 48px));
+      border: 1px solid rgba(255,250,240,.18);
+      border-radius: 8px;
+      background: rgba(16,21,19,.62);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 24px 80px rgba(0,0,0,.28);
+      z-index: 2;
+    }
+    .dash-row { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid rgba(255,250,240,.12); }
+    .dash-row:last-child { border-bottom: 0; }
+    .dash-cell { padding: 14px 16px; }
+    .dash-cell small { display: block; color: rgba(255,250,240,.58); margin-bottom: 4px; }
+    .dash-cell strong { font-size: 18px; }
+
     section { padding: 76px 0; border-bottom: 1px solid var(--line); }
-    .section-head { display: grid; grid-template-columns: .9fr 1.1fr; gap: 42px; align-items: start; margin-bottom: 30px; }
-    .kicker { display: inline-block; margin-bottom: 12px; color: var(--teal); font-weight: 900; font-size: 13px; }
-    h2 { margin: 0; font-size: clamp(30px, 4vw, 42px); line-height: 1.2; letter-spacing: 0; }
+    .section-head {
+      display: grid;
+      grid-template-columns: .9fr 1.1fr;
+      gap: 42px;
+      align-items: start;
+      margin-bottom: 30px;
+    }
+    .kicker { display: inline-block; margin-bottom: 12px; color: var(--mint); font-size: 13px; font-weight: 900; }
+    h2 { margin: 0; font-size: clamp(30px, 4vw, 44px); line-height: 1.18; letter-spacing: 0; }
     .section-head p { margin: 0; color: var(--muted); }
-    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-    .card {
-      min-height: 210px;
-      padding: 24px;
+
+    .logic-board {
+      display: grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap: 18px;
+      align-items: stretch;
+    }
+    .visual-panel,
+    .card,
+    .param-card {
       border: 1px solid var(--line);
       border-radius: 8px;
-      background: rgba(255,250,240,.58);
-      box-shadow: 0 12px 36px rgba(18,18,12,.06);
+      background: rgba(255,250,240,.62);
+      box-shadow: 0 14px 42px rgba(20,20,12,.06);
     }
+    .visual-panel { padding: 26px; background: var(--dark); color: var(--surface); }
+    .price-map { display: grid; gap: 14px; }
+    .price-line { display: grid; grid-template-columns: 140px 1fr 112px; gap: 14px; align-items: center; }
+    .rail { height: 14px; border-radius: 999px; background: rgba(255,250,240,.12); overflow: hidden; }
+    .rail span { display: block; width: var(--w); height: 100%; background: var(--c); }
+    .logic-copy { display: grid; gap: 14px; }
+    .card { padding: 24px; }
     .card b { display: block; margin-bottom: 10px; font-size: 20px; }
     .card p { margin: 0; color: var(--muted); }
-    code { padding: 2px 6px; border-radius: 5px; color: #0f5049; background: rgba(31,154,138,.12); font-family: Consolas, "Courier New", monospace; }
-    .diagram { margin-top: 28px; padding: 28px; border-radius: 8px; color: var(--cream); background: var(--dark); }
-    .price-line { display: grid; grid-template-columns: 170px 1fr 150px; gap: 16px; align-items: center; margin: 12px 0; }
-    .rail { height: 12px; border-radius: 999px; background: rgba(255,250,240,.12); overflow: hidden; }
-    .rail span { display: block; height: 100%; width: var(--w); background: var(--c); }
-    .workflow { display: grid; gap: 0; }
-    .flow { display: grid; grid-template-columns: 92px 1fr; gap: 22px; padding: 18px 0; border-bottom: 1px solid var(--line); }
-    .flow:last-child { border-bottom: 0; }
-    .flow small { color: var(--teal); font-weight: 900; }
-    .flow h3 { margin: 0 0 7px; font-size: 20px; }
-    .flow p { margin: 0; color: var(--muted); }
-    .param-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
-    .param-card { padding: 24px; border: 1px solid var(--line); border-radius: 8px; background: rgba(255,250,240,.58); }
-    .param-card h3 { margin: 0 0 10px; }
-    .param-card ul { margin: 14px 0 0; padding: 0; list-style: none; color: var(--muted); }
-    .param-card li { display: flex; justify-content: space-between; gap: 16px; padding: 8px 0; border-bottom: 1px dashed rgba(21,24,23,.14); }
-    .risk-zone { color: var(--cream); background: linear-gradient(118deg, rgba(201,77,69,.92), rgba(17,21,19,.96) 48%, rgba(31,154,138,.82)); }
-    .risk-zone .kicker, .risk-zone h2, .risk-zone .section-head p { color: var(--cream); }
-    .risk-zone .card { color: var(--cream); background: rgba(255,250,240,.08); border-color: rgba(255,250,240,.22); }
-    .risk-zone .card p { color: rgba(255,250,240,.8); }
-    .statement { margin-top: 24px; padding: 22px; border: 1px solid rgba(255,250,240,.24); border-radius: 8px; background: rgba(17,21,19,.34); color: rgba(255,250,240,.84); }
+    code {
+      padding: 2px 6px;
+      border-radius: 5px;
+      color: #0d574e;
+      background: rgba(42,166,143,.13);
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 14px;
+    }
+
+    .flow-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+    }
+    .flow-step {
+      min-height: 168px;
+      padding: 18px;
+      border: 1px solid rgba(19,23,21,.14);
+      border-radius: 8px;
+      background: rgba(255,250,240,.62);
+    }
+    .flow-step span { color: var(--mint); font-weight: 900; }
+    .flow-step h3 { margin: 10px 0 8px; font-size: 18px; line-height: 1.3; }
+    .flow-step p { margin: 0; color: var(--muted); font-size: 14px; }
+
+    .param-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    .param-card { padding: 20px; }
+    .param-card h3 { margin: 0 0 12px; font-size: 18px; }
+    .param-card ul { margin: 0; padding: 0; list-style: none; color: var(--muted); }
+    .param-card li { padding: 7px 0; border-bottom: 1px dashed rgba(19,23,21,.14); }
+    .param-card li:last-child { border-bottom: 0; }
+
+    .risk-zone {
+      color: var(--surface);
+      background: linear-gradient(118deg, rgba(211,91,80,.9), rgba(16,21,19,.96) 46%, rgba(42,166,143,.82));
+    }
+    .risk-zone .kicker,
+    .risk-zone h2,
+    .risk-zone .section-head p { color: var(--surface); }
+    .risk-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .risk-card {
+      min-height: 190px;
+      padding: 24px;
+      border: 1px solid rgba(255,250,240,.22);
+      border-radius: 8px;
+      background: rgba(255,250,240,.08);
+    }
+    .risk-card b { display: block; margin-bottom: 10px; font-size: 20px; }
+    .risk-card p { margin: 0; color: rgba(255,250,240,.82); }
+    .statement {
+      margin-top: 24px;
+      padding: 22px;
+      border: 1px solid rgba(255,250,240,.24);
+      border-radius: 8px;
+      background: rgba(16,21,19,.34);
+      color: rgba(255,250,240,.86);
+    }
+
     footer { padding: 42px 0 54px; color: rgba(255,250,240,.76); background: var(--dark); }
-    footer strong { color: #f0d089; }
-    @media (max-width: 900px) {
+    footer strong { color: #f1d28e; }
+
+    @media (max-width: 980px) {
+      .dashboard { position: relative; right: auto; bottom: auto; margin: -46px auto 0; }
+      .logic-board, .section-head, .flow-grid, .param-grid, .risk-grid { grid-template-columns: 1fr; }
+      .flow-step { min-height: auto; }
+    }
+    @media (max-width: 640px) {
+      .shell { width: min(100% - 28px, 1160px); }
       .nav { align-items: flex-start; flex-direction: column; padding: 14px 0; }
-      .strip, .section-head, .grid, .param-grid { grid-template-columns: 1fr; }
-      .price-line, .flow { grid-template-columns: 1fr; gap: 8px; }
+      .hero-inner { min-height: auto; padding: 52px 0 78px; }
+      .lead { font-size: 16px; }
+      .dash-row, .price-line { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
   <header class="topbar">
-    <nav class="nav shell">
+    <nav class="nav shell" aria-label="页面导航">
       <a class="brand" href="#top" aria-label="双向趋势 EA">
         <span class="brand-mark">汇</span>
         <span>汇交易策略研发中心</span>
@@ -153,37 +280,52 @@
   <main id="top">
     <section class="hero">
       <div class="shell hero-inner">
-        <div class="eyebrow">双向趋势 EA · 双向挂单 · 突破跟随 · 风控辅助</div>
-        <h1>现价上方挂多，现价下方挂空，等待行情自己选择方向。</h1>
-        <p>双向趋势 EA 是由汇交易策略研发中心整理发布的双向挂单型 EA。策略核心不是主观预测涨跌，而是在当前价格上方预埋 <code>BUYSTOP</code>，在当前价格下方预埋 <code>SELLSTOP</code>，让突破行情触发对应方向订单；同时通过挂单追踪、间距控制、手数递增、盈利平仓和亏损限制，形成一套自动化的趋势跟随交易框架。</p>
-        <div class="actions">
-          <a class="btn primary" href="#logic">查看策略逻辑</a>
-          <a class="btn ghost" href="#risk">先看风险提醒</a>
+        <div class="eyebrow">双向趋势 EA · 双向挂单 · 突破跟随 · 风控优先</div>
+        <h1>在价格上方等突破，在价格下方等跌破。</h1>
+        <p class="lead">双向趋势 EA 采用双向突破挂单框架：现价上方预埋 <code>BUYSTOP</code>，现价下方预埋 <code>SELLSTOP</code>，让行情触发方向选择；再通过动态追踪、订单间距、仓位上限、盈利保护与亏损控制，把交易执行收束在明确规则内。</p>
+        <div class="hero-actions">
+          <a class="btn primary" href="#logic">查看核心逻辑</a>
+          <a class="btn ghost" href="#risk">阅读风险提醒</a>
         </div>
       </div>
-      <div class="strip">
-        <div class="ticker"><small>上方突破触发</small><strong>BUYSTOP 买入挂单</strong></div>
-        <div class="ticker"><small>下方跌破触发</small><strong>SELLSTOP 卖出挂单</strong></div>
-        <div class="ticker"><small>默认首单距离</small><strong>FirstStep 60 点</strong></div>
-        <div class="ticker"><small>在线交流</small><strong>QQ 2048764801</strong></div>
-      </div>
+      <aside class="dashboard" aria-label="策略摘要">
+        <div class="dash-row">
+          <div class="dash-cell"><small>上方触发</small><strong>BUYSTOP</strong></div>
+          <div class="dash-cell"><small>下方触发</small><strong>SELLSTOP</strong></div>
+        </div>
+        <div class="dash-row">
+          <div class="dash-cell"><small>默认首单距离</small><strong>60 点</strong></div>
+          <div class="dash-cell"><small>开单模式</small><strong>无延迟</strong></div>
+        </div>
+        <div class="dash-row">
+          <div class="dash-cell"><small>风控顺序</small><strong>先保护后开单</strong></div>
+          <div class="dash-cell"><small>发布方</small><strong>汇交易策略研发中心</strong></div>
+        </div>
+      </aside>
     </section>
 
     <section id="logic">
       <div class="shell">
         <div class="section-head">
-          <div><span class="kicker">STRATEGY LOGIC</span><h2>策略围绕“突破触发”和“挂单跟随”展开。</h2></div>
-          <p>EA 每个行情跳动都会先检查账户、时间、点差、杠杆、净值和订单数量等基础条件。条件满足后，它会统计当前品种与魔术编号下的持仓、挂单、方向利润和总利润，再决定是否新挂单、移动挂单或执行平仓保护。</p>
+          <div>
+            <span class="kicker">CORE LOGIC</span>
+            <h2>不预测方向，只布置突破触发条件。</h2>
+          </div>
+          <p>EA 每次运行先过滤时间、点差、杠杆、净值、订单数量和交易权限，再统计当前品种与魔术编号下的持仓、挂单和利润结构。只有风控检查通过后，才补充或调整挂单。</p>
         </div>
-        <div class="grid">
-          <article class="card"><b>现价上方挂多单</b><p>当买入方向没有待触发挂单，并且买单方向浮动情况没有触及限制时，EA 会在当前 <code>Ask + FirstStep</code> 的位置放置 <code>BUYSTOP</code>。只有价格真正向上突破并触及挂单位置，买入订单才会成交。</p></article>
-          <article class="card"><b>现价下方挂空单</b><p>当卖出方向没有待触发挂单，并且卖单方向浮动情况符合开单条件时，EA 会在当前 <code>Bid - FirstStep</code> 的位置放置 <code>SELLSTOP</code>。价格向下跌破挂单位置后，卖出订单才会成交。</p></article>
-          <article class="card"><b>每个方向保留一张待触发挂单</b><p>策略先检查 <code>buyStops</code> 与 <code>sellStops</code>。当某一方向挂单数量为 0 时，才会补充新的待触发订单，避免同方向挂单层数失控。</p></article>
-        </div>
-        <div class="diagram">
-          <div class="price-line"><span>上方突破区</span><div class="rail"><span style="--w:82%;--c:var(--green)"></span></div><span>BUYSTOP</span></div>
-          <div class="price-line"><span>当前报价区</span><div class="rail"><span style="--w:72%;--c:var(--gold)"></span></div><span>Ask / Bid</span></div>
-          <div class="price-line"><span>下方跌破区</span><div class="rail"><span style="--w:64%;--c:var(--red)"></span></div><span>SELLSTOP</span></div>
+        <div class="logic-board">
+          <div class="visual-panel">
+            <div class="price-map">
+              <div class="price-line"><span>上方突破区</span><div class="rail"><span style="--w:84%;--c:var(--green)"></span></div><strong>BUYSTOP</strong></div>
+              <div class="price-line"><span>当前报价区</span><div class="rail"><span style="--w:70%;--c:var(--gold)"></span></div><strong>Ask / Bid</strong></div>
+              <div class="price-line"><span>下方跌破区</span><div class="rail"><span style="--w:58%;--c:var(--red)"></span></div><strong>SELLSTOP</strong></div>
+            </div>
+          </div>
+          <div class="logic-copy">
+            <article class="card"><b>现价上方挂多</b><p>买入方向没有待触发挂单时，EA 在 <code>Ask + FirstStep</code> 位置放置买入停止挂单，等待价格向上突破后成交。</p></article>
+            <article class="card"><b>现价下方挂空</b><p>卖出方向没有待触发挂单时，EA 在 <code>Bid - FirstStep</code> 位置放置卖出停止挂单，等待价格向下跌破后成交。</p></article>
+            <article class="card"><b>单方向只保留必要挂单</b><p>策略先检查 <code>buyStops</code> 与 <code>sellStops</code>，某一方向挂单为 0 时才补充新挂单，避免同方向待触发订单失控。</p></article>
+          </div>
         </div>
       </div>
     </section>
@@ -191,15 +333,18 @@
     <section id="flow">
       <div class="shell">
         <div class="section-head">
-          <div><span class="kicker">RUNNING FLOW</span><h2>从筛选环境到平仓保护，EA 先防守再进攻。</h2></div>
-          <p>这套策略的逻辑顺序很清晰：先确认 EA 允许运行，再确认是否处于交易时间，再评估已有订单和利润情况。只有风控检查通过后，才进入挂单和追踪环节。</p>
+          <div>
+            <span class="kicker">RUNNING FLOW</span>
+            <h2>一轮执行，从环境过滤到动态追踪。</h2>
+          </div>
+          <p>双向趋势 EA 的流程是防守型结构：先判断能不能交易，再判断是否该平仓，最后才进入挂单、补单和追踪调整。</p>
         </div>
-        <div class="workflow">
-          <div class="flow"><small>STEP 01</small><div><h3>运行时间与基础条件过滤</h3><p>通过 <code>EA_StartTime</code>、<code>EA_StopTime</code> 控制整体运行，通过 <code>Limit_StartTime</code>、<code>Limit_StopTime</code> 控制允许开单时段，并检查点差、杠杆、净值和订单总数。</p></div></div>
-          <div class="flow"><small>STEP 02</small><div><h3>统计当前订单结构</h3><p>EA 只管理当前品种且魔术编号一致的订单，分别统计买单利润、卖单利润、买卖手数、持仓数量、挂单数量、最高买入价与最低卖出价。</p></div></div>
-          <div class="flow"><small>STEP 03</small><div><h3>盈利与亏损保护优先执行</h3><p>当总盈利达到 <code>CloseAll</code>，或单向盈利达到 <code>StopProfit</code> 条件时，EA 会执行全部平仓或单向平仓；若总浮亏达到 <code>StopLoss</code>，则触发全平保护。</p></div></div>
-          <div class="flow"><small>STEP 04</small><div><h3>按模式控制开单节奏</h3><p>支持 K 线周期模式、秒数间隔模式和无延迟模式。当前默认 <code>OpenMode = C</code>，即符合条件后尽快检查并补充双向挂单。</p></div></div>
-          <div class="flow"><small>STEP 05</small><div><h3>挂单动态追踪</h3><p>如果行情回撤导致挂单离当前价格过远，EA 会用 <code>StepTrallOrders</code> 判断是否需要调整挂单位置，使买入挂单继续保持在现价上方，卖出挂单继续保持在现价下方。</p></div></div>
+        <div class="flow-grid">
+          <article class="flow-step"><span>01</span><h3>环境过滤</h3><p>检查运行时间、交易时间、点差、杠杆、净值、订单数量和交易权限。</p></article>
+          <article class="flow-step"><span>02</span><h3>订单统计</h3><p>统计买卖持仓、挂单数量、方向利润、总利润与关键开仓价格。</p></article>
+          <article class="flow-step"><span>03</span><h3>保护优先</h3><p>先处理总盈利平仓、单向止盈、亏损保护和单边利润保护。</p></article>
+          <article class="flow-step"><span>04</span><h3>双向布单</h3><p>符合条件后，上方补买入挂单，下方补卖出挂单，等待突破触发。</p></article>
+          <article class="flow-step"><span>05</span><h3>挂单追踪</h3><p>行情变化后重新计算挂单位置，让挂单继续贴合当前价格结构。</p></article>
         </div>
       </div>
     </section>
@@ -207,14 +352,17 @@
     <section id="params">
       <div class="shell">
         <div class="section-head">
-          <div><span class="kicker">PARAMETER SYSTEM</span><h2>参数分为距离、仓位、时间、保护四条线。</h2></div>
-          <p>双向趋势 EA 的参数设计围绕挂单距离、加仓手数、订单限制和盈利保护建立约束。不同品种、点差、账户规模和交易风格，需要先做回测与模拟验证。</p>
+          <div>
+            <span class="kicker">PARAMETERS</span>
+            <h2>参数围绕距离、仓位、节奏、保护四类约束。</h2>
+          </div>
+          <p>参数不是收益承诺，而是约束交易行为的边界。不同品种、点差和账户规模，都需要先做回测、模拟盘和小资金验证。</p>
         </div>
         <div class="param-grid">
-          <article class="param-card"><h3>订单距离机制</h3><p>首单用 <code>FirstStep</code> 控制离现价的距离；五位或三位报价品种会自动乘以 10，适配报价精度。</p><ul><li><span>首单距离</span><code>FirstStep_Input = 60</code></li><li><span>最小间距</span><code>MinDistance_Input = 120</code></li><li><span>普通间距</span><code>Step_Input = 150</code></li></ul></article>
-          <article class="param-card"><h3>仓位递增机制</h3><p>首单使用基础手数，后续订单按倍数和递增手数计算，但不会超过最大手数。</p><ul><li><span>初始手数</span><code>lot = 0.01</code></li><li><span>最大手数</span><code>Maxlot = 0.04</code></li><li><span>倍增系数</span><code>K_Lot = 1.05</code></li></ul></article>
-          <article class="param-card"><h3>盈利与平仓保护</h3><p>策略包含总盈利平仓、单向止盈、单边利润保护、止损金额和超额利润平仓等机制。</p><ul><li><span>总盈利平仓</span><code>CloseAll = 2</code></li><li><span>单向止盈</span><code>StopProfit = 1000</code></li><li><span>止损金额</span><code>StopLoss_Input = 0</code></li></ul></article>
-          <article class="param-card"><h3>交易过滤与限制</h3><p>EA 会限制最大点差、最低杠杆、最大订单总数，也预留价格上限与下限过滤参数。</p><ul><li><span>最大点差</span><code>MaxSpread = 35</code></li><li><span>最低杠杆</span><code>Leverage = 100</code></li><li><span>最大订单数</span><code>Totals = 5000</code></li></ul></article>
+          <article class="param-card"><h3>订单距离</h3><ul><li><code>FirstStep</code> 首单距离</li><li><code>MinDistance</code> 最小间距</li><li><code>Step</code> 普通间距</li></ul></article>
+          <article class="param-card"><h3>仓位控制</h3><ul><li><code>lot</code> 初始手数</li><li><code>Maxlot</code> 最大手数</li><li><code>K_Lot</code> 倍增系数</li></ul></article>
+          <article class="param-card"><h3>盈利保护</h3><ul><li><code>CloseAll</code> 总盈利平仓</li><li><code>StopProfit</code> 单向止盈</li><li><code>CloseBuySell</code> 单边保护</li></ul></article>
+          <article class="param-card"><h3>交易过滤</h3><ul><li><code>MaxSpread</code> 最大点差</li><li><code>Leverage</code> 最低杠杆</li><li><code>MinEquity</code> 最低净值</li></ul></article>
         </div>
       </div>
     </section>
@@ -222,13 +370,16 @@
     <section id="risk" class="risk-zone">
       <div class="shell">
         <div class="section-head">
-          <div><span class="kicker">RISK DISCLOSURE</span><h2>风险提示必须放在策略介绍里。</h2></div>
-          <p>双向趋势 EA 属于交易辅助工具，不构成投资建议，不承诺收益。任何自动化策略都可能在极端行情、跳空、滑点、点差扩大、网络延迟、平台规则变化和连续震荡行情中出现亏损。</p>
+          <div>
+            <span class="kicker">RISK DISCLOSURE</span>
+            <h2>交易辅助工具，不等于盈利保证。</h2>
+          </div>
+          <p>任何自动化策略都可能在极端行情、假突破、滑点、点差扩大、网络延迟、平台规则变化和连续震荡行情中出现亏损。</p>
         </div>
-        <div class="grid">
-          <article class="card"><b>突破挂单可能遇到假突破</b><p>市场经常出现刺破后快速回落或反抽的情况，挂单成交并不代表趋势已经确认。</p></article>
-          <article class="card"><b>递增仓位会放大回撤</b><p>手数倍增和递增机制能提高趋势延续时的跟随能力，也会在连续反向波动中放大浮亏压力。</p></article>
-          <article class="card"><b>点差、滑点和流动性会改变结果</b><p>实盘成交价格可能与回测、模拟盘不同，重要数据和流动性不足时偏差会更明显。</p></article>
+        <div class="risk-grid">
+          <article class="risk-card"><b>突破可能失败</b><p>价格触发挂单不代表趋势已经确认，市场可能出现刺破后快速回落或反抽。</p></article>
+          <article class="risk-card"><b>递增仓位会放大回撤</b><p>手数递增能提高趋势行情中的跟随能力，也会在连续反向波动中放大浮亏。</p></article>
+          <article class="risk-card"><b>实盘结果可能偏离回测</b><p>实盘存在点差、滑点、延迟和流动性变化，成交结果可能与模拟环境不同。</p></article>
         </div>
         <div class="statement">免责声明：过去的收益不代表未来的收益；账号产生的盈亏需要用户自行承担；本 EA 仅作为交易辅助工具，不作任何盈利保证；任何策略都有风险，包括但不限于代码问题、BUG、行情异常、平台限制、网络延迟与用户参数设置不当。正式使用前，请先进行充分回测、小资金验证和模拟盘测试。</div>
       </div>
@@ -238,7 +389,7 @@
   <footer>
     <div class="shell">
       <div><strong>汇交易策略研发中心出品策略</strong> · 双向趋势 EA 双向挂单趋势跟随策略</div>
-      <div>在线交流：QQ 2048764801 · 交易有风险，投资者盈亏自负。</div>
+      <div>交易有风险，投资者盈亏自负。</div>
     </div>
   </footer>
 </body>
