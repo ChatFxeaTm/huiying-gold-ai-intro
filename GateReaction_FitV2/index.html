@@ -1,0 +1,1323 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GateReaction_FitV2 策略说明 | 汇交易策略研发中心</title>
+  <meta name="description" content="GateReaction_FitV2 关口反应策略说明、参数解释、交互式关口计算器与风险提醒。" />
+  <style>
+    :root {
+      --ink: #17201d;
+      --muted: #617069;
+      --paper: #f7f4eb;
+      --panel: #fffdf7;
+      --line: #d8d1c2;
+      --line-strong: #1d2b27;
+      --accent: #0e7c72;
+      --accent-2: #a83f2d;
+      --gold: #b88924;
+      --green: #126b3f;
+      --red: #af362b;
+      --cyan: #167d8c;
+      --shadow: 0 18px 50px rgba(23, 32, 29, .12);
+      --radius: 8px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        linear-gradient(90deg, rgba(23,32,29,.055) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(23,32,29,.045) 1px, transparent 1px),
+        radial-gradient(circle at 20% 0%, rgba(184,137,36,.16), transparent 30rem),
+        linear-gradient(135deg, #f9f6ec 0%, #eef5f1 48%, #f8efe9 100%);
+      background-size: 34px 34px, 34px 34px, auto, auto;
+      font-family: "Noto Serif SC", "Source Han Serif SC", "Microsoft YaHei", serif;
+      line-height: 1.65;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image: repeating-linear-gradient(
+        90deg,
+        rgba(23, 32, 29, .028) 0,
+        rgba(23, 32, 29, .028) 1px,
+        transparent 1px,
+        transparent 5px
+      );
+      mix-blend-mode: multiply;
+      z-index: 20;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    button, input, select {
+      font: inherit;
+    }
+
+    .shell {
+      display: grid;
+      grid-template-columns: 294px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      padding: 22px;
+      border-right: 1px solid var(--line-strong);
+      background: rgba(255, 253, 247, .86);
+      backdrop-filter: blur(12px);
+      overflow: auto;
+    }
+
+    .brand {
+      display: grid;
+      gap: 10px;
+      padding: 4px 0 20px;
+      border-bottom: 2px solid var(--line-strong);
+    }
+
+    .brand small {
+      color: var(--accent);
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 26px;
+      line-height: 1.08;
+      letter-spacing: 0;
+    }
+
+    .brand p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .nav {
+      display: grid;
+      gap: 6px;
+      margin: 18px 0;
+    }
+
+    .nav a {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      min-height: 38px;
+      padding: 8px 10px;
+      border: 1px solid transparent;
+      border-radius: var(--radius);
+      color: #26332f;
+      font-size: 14px;
+    }
+
+    .nav a:hover,
+    .nav a.active {
+      border-color: var(--line-strong);
+      background: #fff8e6;
+      box-shadow: 4px 4px 0 rgba(23,32,29,.12);
+    }
+
+    .side-note {
+      margin-top: 20px;
+      padding: 14px;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      background: #f4efe0;
+      font-size: 13px;
+      color: #35423d;
+    }
+
+    main {
+      min-width: 0;
+      padding: 28px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .badge-row,
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge,
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 4px 9px;
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      background: var(--panel);
+      color: #24322e;
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .badge.warn {
+      background: #fff0e9;
+      color: var(--red);
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.12fr) minmax(320px, .88fr);
+      gap: 18px;
+      align-items: stretch;
+      margin-bottom: 18px;
+    }
+
+    .panel {
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      background: rgba(255, 253, 247, .94);
+      box-shadow: var(--shadow);
+    }
+
+    .hero-copy {
+      padding: clamp(22px, 4vw, 42px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-copy::after {
+      content: "";
+      position: absolute;
+      right: -80px;
+      bottom: -90px;
+      width: 260px;
+      height: 260px;
+      border: 24px double rgba(14, 124, 114, .16);
+      transform: rotate(12deg);
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    h2, h3, h4, p { letter-spacing: 0; }
+
+    .hero h2 {
+      max-width: 820px;
+      margin: 0;
+      font-size: clamp(38px, 5vw, 76px);
+      line-height: .96;
+      letter-spacing: 0;
+    }
+
+    .hero-copy .lead {
+      max-width: 760px;
+      margin: 22px 0 0;
+      color: #33433e;
+      font-size: 18px;
+    }
+
+    .snapshot {
+      display: grid;
+      gap: 12px;
+      padding: 18px;
+    }
+
+    .scoreboard {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .metric {
+      min-height: 102px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fbf7ec;
+    }
+
+    .metric strong {
+      display: block;
+      font-size: 28px;
+      line-height: 1.05;
+    }
+
+    .metric span {
+      display: block;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .module-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .module-tag {
+      padding: 10px;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      background: #fffdf7;
+      text-align: center;
+    }
+
+    .module-tag b {
+      display: block;
+      color: var(--accent);
+      font-size: 18px;
+    }
+
+    .module-tag span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    section {
+      scroll-margin-top: 24px;
+      margin-top: 24px;
+      padding: 26px;
+      border: 1px solid rgba(29, 43, 39, .38);
+      border-radius: var(--radius);
+      background: rgba(255, 253, 247, .72);
+    }
+
+    section > .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 16px;
+      margin-bottom: 18px;
+      border-bottom: 1px solid var(--line-strong);
+      padding-bottom: 12px;
+    }
+
+    .section-head h3 {
+      margin: 0;
+      font-size: clamp(24px, 3vw, 38px);
+      line-height: 1.05;
+    }
+
+    .section-head p {
+      max-width: 680px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .three-col {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .info-block {
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+    }
+
+    .info-block h4 {
+      margin: 0 0 10px;
+      font-size: 19px;
+    }
+
+    .info-block p,
+    .info-block li {
+      color: #3d4b47;
+      font-size: 15px;
+    }
+
+    .info-block p { margin: 0; }
+
+    .info-block ul,
+    .info-block ol {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .flow {
+      display: grid;
+      gap: 10px;
+      counter-reset: flow;
+    }
+
+    .flow-step {
+      position: relative;
+      display: grid;
+      grid-template-columns: 56px minmax(0, 1fr);
+      gap: 12px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fffdf7;
+    }
+
+    .flow-step::before {
+      counter-increment: flow;
+      content: counter(flow, decimal-leading-zero);
+      display: grid;
+      place-items: center;
+      width: 46px;
+      height: 46px;
+      border: 1px solid var(--line-strong);
+      border-radius: 50%;
+      background: #eef5f1;
+      color: var(--accent);
+      font-weight: 900;
+    }
+
+    .flow-step h4 {
+      margin: 0 0 5px;
+      font-size: 17px;
+    }
+
+    .flow-step p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .calculator {
+      display: grid;
+      grid-template-columns: minmax(280px, .8fr) minmax(0, 1.2fr);
+      gap: 18px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      color: #2d3b36;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    input,
+    select {
+      width: 100%;
+      min-height: 42px;
+      padding: 8px 10px;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      background: #fffefb;
+      color: var(--ink);
+      outline: none;
+    }
+
+    input:focus,
+    select:focus {
+      box-shadow: 0 0 0 3px rgba(14, 124, 114, .2);
+    }
+
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .btn {
+      min-height: 40px;
+      padding: 8px 12px;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      background: var(--ink);
+      color: #fffdf7;
+      cursor: pointer;
+      font-weight: 900;
+    }
+
+    .btn.alt {
+      background: #fffdf7;
+      color: var(--ink);
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 4px 4px 0 rgba(23,32,29,.15);
+    }
+
+    .gate-board {
+      min-height: 440px;
+      display: grid;
+      grid-template-rows: auto minmax(210px, 1fr) auto;
+      gap: 14px;
+      padding: 18px;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(90deg, rgba(23,32,29,.06) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(23,32,29,.04) 1px, transparent 1px),
+        #fffdf7;
+      background-size: 26px 26px;
+    }
+
+    .gate-stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .gate-stat {
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.72);
+    }
+
+    .gate-stat b {
+      display: block;
+      font-size: 18px;
+    }
+
+    .gate-stat span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      min-height: 230px;
+      border: 1px solid rgba(29, 43, 39, .24);
+      border-radius: var(--radius);
+      background: rgba(247,244,235,.74);
+    }
+
+    .signal-line {
+      min-height: 56px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .signal {
+      padding: 10px 12px;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      background: #f6f0e0;
+      font-weight: 900;
+    }
+
+    .signal.ok { color: var(--green); background: #edf8ef; }
+    .signal.no { color: var(--red); background: #fff0e9; }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .tab {
+      min-height: 38px;
+      padding: 7px 12px;
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      background: #fffdf7;
+      cursor: pointer;
+      font-weight: 900;
+    }
+
+    .tab.active {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .module-card {
+      display: none;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+    }
+
+    .module-card.active { display: block; }
+
+    .module-card h4 {
+      margin: 0 0 8px;
+      font-size: 24px;
+    }
+
+    .module-card p {
+      color: #3d4b47;
+    }
+
+    .param-toolbar {
+      display: grid;
+      grid-template-columns: minmax(220px, 1fr) 220px;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .param-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .param-card {
+      display: grid;
+      gap: 8px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+    }
+
+    .param-card header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 8px;
+    }
+
+    .param-name {
+      margin: 0;
+      font-size: 17px;
+      font-family: Consolas, "Courier New", monospace;
+    }
+
+    .param-default {
+      padding: 2px 7px;
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      background: #f4efe0;
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .param-card p {
+      margin: 0;
+      color: #3d4b47;
+      font-size: 14px;
+    }
+
+    .param-card .adjust {
+      padding-top: 8px;
+      border-top: 1px dashed var(--line);
+      color: var(--muted);
+    }
+
+    .risk-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .risk-card {
+      padding: 16px;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      background: #fff7f1;
+    }
+
+    .risk-card strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--red);
+      font-size: 18px;
+    }
+
+    .footer {
+      margin: 24px 0 6px;
+      padding: 18px;
+      border-top: 2px solid var(--line-strong);
+      color: var(--muted);
+      text-align: center;
+      font-size: 13px;
+    }
+
+    .mobile-menu {
+      display: none;
+      width: 100%;
+      margin-bottom: 12px;
+    }
+
+    @media (max-width: 1100px) {
+      .shell {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: relative;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--line-strong);
+      }
+
+      .nav {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .hero,
+      .calculator {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 760px) {
+      main { padding: 14px; }
+      section { padding: 18px; }
+      .topbar,
+      section > .section-head {
+        align-items: start;
+        flex-direction: column;
+      }
+      .hero h2 { font-size: 42px; }
+      .scoreboard,
+      .module-strip,
+      .two-col,
+      .three-col,
+      .form-grid,
+      .gate-stats,
+      .signal-line,
+      .param-grid,
+      .risk-grid,
+      .param-toolbar {
+        grid-template-columns: 1fr;
+      }
+      .nav { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 460px) {
+      .nav { grid-template-columns: 1fr; }
+      .hero h2 { font-size: 34px; }
+      .brand h1 { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <small>汇交易策略研发中心</small>
+        <h1>GateReaction_FitV2</h1>
+        <p>关口反应策略说明与参数调校手册</p>
+      </div>
+      <nav class="nav" id="nav">
+        <a href="#overview">策略总览 <span>01</span></a>
+        <a href="#logic">运行逻辑 <span>02</span></a>
+        <a href="#calculator">关口计算 <span>03</span></a>
+        <a href="#modules">四个模块 <span>04</span></a>
+        <a href="#parameters">参数大全 <span>05</span></a>
+        <a href="#adjust">调参路线 <span>06</span></a>
+        <a href="#risk">风险提醒 <span>07</span></a>
+      </nav>
+      <div class="side-note">
+        本页只保留策略名称、逻辑说明和研发中心署名；不展示任何私人联系方式。所有点数类参数均按 MT4 的 <b>Point</b> 换算，实际价格距离会随品种报价位数变化。
+      </div>
+    </aside>
+
+    <main>
+      <div class="topbar">
+        <div class="badge-row">
+          <span class="badge">XAUUSD M1 加载</span>
+          <span class="badge">4 模块结构</span>
+          <span class="badge warn">先模拟后实盘</span>
+        </div>
+        <div class="badge-row">
+          <span class="badge">版本 2.0</span>
+          <span class="badge">静态交互说明页</span>
+        </div>
+      </div>
+
+      <div class="hero" id="overview">
+        <div class="panel hero-copy">
+          <p class="eyebrow">EA 名称：GateReaction_FitV2</p>
+          <h2>围绕价格关口，等待反应，而不是盲目追价。</h2>
+          <p class="lead">
+            这套 EA 的核心思路是：先把黄金价格附近的重要关口算出来，再观察价格靠近上关口或下关口时的 K 线方向、穿越顺序、点差和交易时间，满足条件后才开仓。它不是预测行情一定上涨或下跌，而是抓“靠近关口后的反应”。
+          </p>
+        </div>
+
+        <div class="panel snapshot">
+          <div class="scoreboard">
+            <div class="metric"><strong>#2588</strong><span>M1 主力模块，默认启用，负责主要进场。</span></div>
+            <div class="metric"><strong>#369</strong><span>M1 补刀模块，默认关闭，适合谨慎测试后再开。</span></div>
+            <div class="metric"><strong>#888</strong><span>M15 延伸模块，默认关闭，信号更慢，止损更大。</span></div>
+            <div class="metric"><strong>#999</strong><span>M15 激进模块，默认关闭，节奏偏主动。</span></div>
+          </div>
+          <div class="module-strip">
+            <div class="module-tag"><b>IGM</b><span>主关口步长</span></div>
+            <div class="module-tag"><b>FG</b><span>子关口偏移 1</span></div>
+            <div class="module-tag"><b>SG</b><span>子关口偏移 2</span></div>
+            <div class="module-tag"><b>Trail</b><span>盈利后移动止损</span></div>
+          </div>
+        </div>
+      </div>
+
+      <section id="logic">
+        <div class="section-head">
+          <h3>策略怎么运行</h3>
+          <p>用小白能听懂的话说，它先画出上下关口，再等价格靠近指定范围，最后通过 K 线颜色、穿越顺序、点差和时间过滤，决定是否开仓。</p>
+        </div>
+
+        <div class="flow">
+          <div class="flow-step">
+            <div>
+              <h4>每个 Tick 先做风控</h4>
+              <p>EA 每次收到新报价，都会先检查授权、到期时间、已有订单的移动止盈，以及价格是否触发关口越界强平。</p>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div>
+              <h4>计算当前价格附近的关口</h4>
+              <p>系统用 IGM 做主间距，用 FG 和 SG 做两个子关口偏移，得到当前价格上下最近的一组关口。</p>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div>
+              <h4>M1 模块在新 M1 K 线判断</h4>
+              <p>#2588 与 #369 在 M1 新 K 线出现时判断，避免同一根 K 线重复进场。</p>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div>
+              <h4>M15 模块在新 M15 K 线判断</h4>
+              <p>#888 与 #999 在 M15 新 K 线出现时判断，并且参考上一根已经收盘的 M15 K 线颜色。</p>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div>
+              <h4>同一 Magic 只保留一笔持仓</h4>
+              <p>每个模块都有自己的 Magic Number。某个模块已有持仓时，该模块不会再开第二笔，但其他模块如果启用，仍可能各自开仓。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="two-col" style="margin-top:16px">
+          <div class="info-block">
+            <h4>多单大概怎么来</h4>
+            <p>价格开在上关口下方一定距离内，说明价格接近上方关口；再叠加穿越过滤、前一根 K 线颜色、当前 K 线实体不能太大，才允许买入。M15 模块还要求上一根 M15 是阴线，强调“下跌后的反应”。</p>
+          </div>
+          <div class="info-block">
+            <h4>空单大概怎么来</h4>
+            <p>价格开在下关口上方一定距离内，说明价格接近下方关口；再经过同样的穿越、K 线、实体大小过滤，才允许卖出。M15 模块还要求上一根 M15 是阳线，强调“上涨后的反应”。</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="calculator">
+        <div class="section-head">
+          <h3>关口计算器</h3>
+          <p>把价格、Point 和关口参数填进去，就能看到 EA 会找到哪两个上下关口，以及当前价格是否落在默认入场区间。</p>
+        </div>
+
+        <div class="calculator">
+          <div class="panel" style="padding:18px">
+            <div class="form-grid">
+              <label>当前价格
+                <input id="priceInput" type="number" step="0.001" value="2350.120" />
+              </label>
+              <label>Point
+                <input id="pointInput" type="number" step="0.001" value="0.01" />
+              </label>
+              <label>IGM
+                <input id="igmInput" type="number" step="1" value="800" />
+              </label>
+              <label>FG
+                <input id="fgInput" type="number" step="1" value="600" />
+              </label>
+              <label>SG
+                <input id="sgInput" type="number" step="1" value="60" />
+              </label>
+              <label>报价位数 Digits
+                <input id="digitsInput" type="number" step="1" value="2" />
+              </label>
+              <label>BuyUpGate
+                <input id="buyUpInput" type="number" step="1" value="600" />
+              </label>
+              <label>SellLowGate
+                <input id="sellLowInput" type="number" step="1" value="600" />
+              </label>
+            </div>
+            <div class="button-row">
+              <button class="btn" id="calcBtn" type="button">重新计算</button>
+              <button class="btn alt" id="resetCalc" type="button">恢复默认</button>
+            </div>
+          </div>
+
+          <div class="gate-board">
+            <div class="gate-stats">
+              <div class="gate-stat"><b id="upperOut">-</b><span>上关口 Upper</span></div>
+              <div class="gate-stat"><b id="lowerOut">-</b><span>下关口 Lower</span></div>
+              <div class="gate-stat"><b id="distUpOut">-</b><span>距上关口</span></div>
+              <div class="gate-stat"><b id="distLowOut">-</b><span>距下关口</span></div>
+            </div>
+            <canvas id="gateCanvas" width="900" height="300" aria-label="Gate visualizer"></canvas>
+            <div class="signal-line">
+              <div class="signal" id="buySignal">BUY 区间：-</div>
+              <div class="signal" id="sellSignal">SELL 区间：-</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="modules">
+        <div class="section-head">
+          <h3>四个模块</h3>
+          <p>四个模块像四套不同节奏的执行器。默认只开 #2588，是比较稳妥的起点；其他模块建议单独回测、模拟跑稳定后再逐步启用。</p>
+        </div>
+
+        <div class="tabs" id="moduleTabs">
+          <button class="tab active" type="button" data-module="m2588">#2588 主力 M1</button>
+          <button class="tab" type="button" data-module="m369">#369 补刀 M1</button>
+          <button class="tab" type="button" data-module="m888">#888 延伸 M15</button>
+          <button class="tab" type="button" data-module="m999">#999 激进 M15</button>
+        </div>
+
+        <div class="module-card active" id="m2588">
+          <h4>#2588：主力 M1 模块</h4>
+          <p>这是 EA 默认启用的主模块，持仓频率相对最高。默认手数 0.01，止损 500 微点，止盈 10000 微点，真正的盈利管理更多依靠移动止盈：盈利达到 280 微点后，止损会向盈利方向推进。</p>
+          <p>小白建议：刚开始只保留这个模块，先看它在自己平台点差、报价位数和服务器时间下的表现。</p>
+        </div>
+        <div class="module-card" id="m369">
+          <h4>#369：补刀 M1 模块</h4>
+          <p>这个模块逻辑和 M1 主力类似，但默认关闭。它的意义是给同一类 M1 信号增加一套独立 Magic 的机会，因此启用后整体交易次数和同时持仓上限都会增加。</p>
+          <p>小白建议：只有当 #2588 在模拟盘表现稳定，并且账户能承受更多波动时，再考虑开启。</p>
+        </div>
+        <div class="module-card" id="m888">
+          <h4>#888：延伸 M15 模块</h4>
+          <p>这个模块在 M15 新 K 线才判断，默认止损 1000 微点、止盈 3000 微点，移动止盈启动 550 微点。它更像慢节奏延伸信号，容忍空间更大。</p>
+          <p>小白建议：M15 模块不要和 M1 模块一上来全开，先单独回测，再看是否与主模块冲突。</p>
+        </div>
+        <div class="module-card" id="m999">
+          <h4>#999：激进 M15 模块</h4>
+          <p>它也是 M15 逻辑，但默认止损 700 微点、移动止盈启动 280 微点，节奏比 #888 更主动。默认关闭，是因为它可能放大账户净值波动。</p>
+          <p>小白建议：除非你已经清楚 M15 模块对回撤、持仓时间和交易次数的影响，否则不要急着启用。</p>
+        </div>
+      </section>
+
+      <section id="parameters">
+        <div class="section-head">
+          <h3>参数逐一说明</h3>
+          <p>可搜索参数英文名，也可按模块筛选。每个参数都写了“它是什么”和“怎么调会发生什么”。</p>
+        </div>
+
+        <div class="param-toolbar">
+          <input id="paramSearch" type="search" placeholder="搜索参数，例如 Trail、IGM、MaxSpread" />
+          <select id="paramFilter">
+            <option value="all">全部参数</option>
+            <option value="授权">授权</option>
+            <option value="关口模型">关口模型</option>
+            <option value="K线过滤">K线过滤</option>
+            <option value="入场区间">入场区间</option>
+            <option value="#2588">#2588</option>
+            <option value="#888">#888</option>
+            <option value="#999">#999</option>
+            <option value="#369">#369</option>
+            <option value="时间风控">时间风控</option>
+            <option value="关口强平">关口强平</option>
+            <option value="日志面板">日志面板</option>
+          </select>
+        </div>
+        <div class="param-grid" id="paramGrid"></div>
+      </section>
+
+      <section id="adjust">
+        <div class="section-head">
+          <h3>小白调参路线</h3>
+          <p>不要一次改很多参数。每次只改一组，跑同一时间段回测或模拟盘，观察交易次数、胜率、回撤、最大连续亏损和滑点影响。</p>
+        </div>
+
+        <div class="three-col">
+          <div class="info-block">
+            <h4>第一步：先管风险</h4>
+            <p>从手数 Lots 开始。账户小、杠杆高、黄金波动大时，0.01 手也可能有明显波动。先用最小手数跑，不要先追求收益曲线好看。</p>
+          </div>
+          <div class="info-block">
+            <h4>第二步：再管频率</h4>
+            <p>交易太多，优先收窄时间、降低模块数量、调严格 MaxSpread；交易太少，再看入场区间和模块开关，不要直接放大手数。</p>
+          </div>
+          <div class="info-block">
+            <h4>第三步：最后管利润</h4>
+            <p>TrailTrig 决定盈利多少后开始保护，TrailDist 决定回撤多少让利润落袋。两者要一起看，单独调一个容易改变策略性格。</p>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top:16px;padding:18px">
+          <h4 style="margin:0 0 12px;font-size:22px">仓位粗算器</h4>
+          <div class="form-grid">
+            <label>账户资金
+              <input id="equityInput" type="number" value="1000" />
+            </label>
+            <label>单笔愿意亏损比例 %
+              <input id="riskPctInput" type="number" value="1" step="0.1" />
+            </label>
+            <label>止损微点
+              <input id="slPtsInput" type="number" value="500" />
+            </label>
+            <label>每 1 手每 Point 价值
+              <input id="tickValueInput" type="number" value="1" step="0.01" />
+            </label>
+          </div>
+          <p id="lotResult" style="margin:12px 0 0;color:var(--accent);font-weight:900">-</p>
+        </div>
+      </section>
+
+      <section id="risk">
+        <div class="section-head">
+          <h3>风险提醒</h3>
+          <p>EA 是执行工具，不是盈利保证。特别是黄金品种波动快、点差和滑点变化明显，参数需要和自己的平台环境匹配。</p>
+        </div>
+
+        <div class="risk-grid">
+          <div class="risk-card">
+            <strong>历史不代表未来</strong>
+            <p>交割单、回测和模拟盘只能说明某段行情下的表现，不能保证以后同样盈利。</p>
+          </div>
+          <div class="risk-card">
+            <strong>滑点会改变结果</strong>
+            <p>EA 代码里有止损、止盈和移动止盈，但真实成交可能受点差扩大、流动性和网络延迟影响。</p>
+          </div>
+          <div class="risk-card">
+            <strong>不要重仓叠模块</strong>
+            <p>四个模块同时开启会增加交易次数和同时持仓数量。新手建议从 #2588 单模块、小手数开始。</p>
+          </div>
+          <div class="risk-card">
+            <strong>先确认报价位数</strong>
+            <p>所有微点参数都要乘以 Point 才是价格距离。不同黄金报价位数下，同一个参数代表的真实距离不一样。</p>
+          </div>
+          <div class="risk-card">
+            <strong>避开异常时段</strong>
+            <p>重大数据、开盘收盘、流动性不足时，点差和跳价可能让策略表现明显偏离平时。</p>
+          </div>
+          <div class="risk-card">
+            <strong>自己承担交易结果</strong>
+            <p>本说明只用于理解 EA 逻辑和参数，不构成投资建议。任何实盘交易都应以可承受亏损为前提。</p>
+          </div>
+        </div>
+      </section>
+
+      <div class="footer">
+        GateReaction_FitV2 策略说明 | 汇交易策略研发中心
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const params = [
+      ["授权", "UseAuth", "true", "是否启用账号授权检查。开启后，只有授权列表内的账号能运行。", "如果只是本地学习或模拟测试，可由发布方决定是否关闭；实盘环境建议保持开启。"],
+      ["授权", "AuthAccts", "账号列表", "允许运行 EA 的账号列表，用英文逗号隔开。", "这是管理权限用的参数，不影响策略开仓逻辑。不要把私人账号信息公开展示。"],
+      ["授权", "UseTimeLimit", "true", "是否启用到期时间限制。", "开启后，超过 ExpiryDT 就停止运行；关闭则不检查有效期。"],
+      ["授权", "ExpiryDT", "2036.05.12 23:59:59", "EA 的有效期时间。", "到期后不会继续交易。修改前确认自己有权限，也要避免误填过去时间。"],
+
+      ["关口模型", "IGM", "800", "主关口步长。可以理解为关口网格之间的大间距。", "调大：关口更稀，信号可能减少；调小：关口更密，信号可能增多。必须大于或等于 FG 和 SG。"],
+      ["关口模型", "FG", "600", "子关口偏移 1。EA 会在主关口基础上加这个偏移，形成一组可交易关口。", "调大或调小会改变上下关口位置，影响价格是否落入入场区间。"],
+      ["关口模型", "SG", "60", "子关口偏移 2。与 FG 一起构成双层子关口。", "通常不建议单独大幅改动。改它等于改变整个关口结构。"],
+
+      ["K线过滤", "BuyPrevBar", "1", "多单要求前一根 M1 K 线颜色。0=阳线，1=阴线。", "默认 1 表示前一根是阴线才考虑买，偏反转思路。"],
+      ["K线过滤", "SellPrevBar", "0", "空单要求前一根 M1 K 线颜色。0=阳线，1=阴线。", "默认 0 表示前一根是阳线才考虑卖，偏反转思路。"],
+      ["K线过滤", "BuyTrendMode", "2", "多单穿越过滤。0=先向下穿，1=先向上穿，2=两种共存。", "越严格，交易越少；模式 2 更宽松，信号覆盖更广。"],
+      ["K线过滤", "SellTrendMode", "2", "空单穿越过滤。0=先向下穿，1=先向上穿，2=两种共存。", "和 BuyTrendMode 类似，用来判断最近 500 根 K 线内价格穿越上下关口的顺序。"],
+      ["K线过滤", "MaxBodyOffset", "55", "当前 K 线实体最大允许值，单位是微点。", "调小：不追价更严格，信号减少；调大：更容易进场，但可能追到急涨急跌。"],
+
+      ["入场区间", "BuyLowGate", "0", "多单距离上关口必须大于这个值。", "默认从 0 开始，表示只要在上关口下方且没超过上限，就可能进入多单区间。"],
+      ["入场区间", "BuyUpGate", "600", "多单距离上关口必须小于这个值。", "调小：买入更贴近上关口；调大：买入范围更宽，交易可能更多。"],
+      ["入场区间", "SellUpGate", "0", "空单距离下关口必须大于这个值。", "默认从 0 开始，表示只要在下关口上方且没超过上限，就可能进入空单区间。"],
+      ["入场区间", "SellLowGate", "600", "空单距离下关口必须小于这个值。", "调小：卖出更贴近下关口；调大：卖出范围更宽，交易可能更多。"],
+
+      ["#2588", "En_2588", "true", "是否启用 #2588 主力 M1 模块。", "新手建议先只开这个模块，稳定后再评估其他模块。"],
+      ["#2588", "Magic_2588", "2588", "模块的订单识别号。", "不要和其他 EA 或其他模块重复，否则统计持仓和管理订单会混乱。"],
+      ["#2588", "Lots_2588", "0.01", "每次开仓手数。", "最直接影响风险。账户越小，越要保守，不要用加大手数弥补参数问题。"],
+      ["#2588", "SL_2588", "500", "固定止损，单位微点。", "调大：给行情更多空间，但单笔亏损变大；调小：亏损小，但更容易被扫损。"],
+      ["#2588", "TP_2588", "10000", "固定止盈，单位微点，更多像安全网。", "本策略主要靠移动止盈保护利润，TP 很大时不代表每单都要拿到那么远。"],
+      ["#2588", "TrailTrig_2588", "280", "盈利达到多少微点后启动移动止盈。", "调小：更早保护，但可能过早出场；调大：给利润奔跑空间，但回吐风险更大。"],
+      ["#2588", "TrailDist_2588", "50", "移动止盈的回调距离。", "调小：利润锁得紧，容易被正常波动打出；调大：更宽松，但回吐更多。"],
+
+      ["#888", "En_888", "false", "是否启用 #888 延伸 M15 模块。", "默认关闭。开启前应单独回测，确认 M15 信号适合当前平台和行情。"],
+      ["#888", "Magic_888", "888", "模块的订单识别号。", "保持唯一即可。"],
+      ["#888", "Lots_888", "0.01", "每次开仓手数。", "M15 止损更大，实际风险可能高于 M1 模块，不要只看手数一样。"],
+      ["#888", "SL_888", "1000", "固定止损，单位微点。", "比主力模块更宽，适合慢节奏，但单笔风险也更大。"],
+      ["#888", "TP_888", "3000", "固定止盈，单位微点。", "比 #2588 小，适合更明确的 M15 延伸目标。"],
+      ["#888", "TrailTrig_888", "550", "移动止盈启动距离。", "默认更晚启动，给 M15 单更大的运行空间。"],
+      ["#888", "TrailDist_888", "50", "移动止盈回调距离。", "配合 TrailTrig 使用。启动晚但距离短，容易在盈利后快速锁定。"],
+
+      ["#999", "En_999", "false", "是否启用 #999 激进 M15 模块。", "默认关闭。它可能增加交易强度，建议熟悉后再开。"],
+      ["#999", "Magic_999", "999", "模块的订单识别号。", "保持唯一即可。"],
+      ["#999", "Lots_999", "0.01", "每次开仓手数。", "激进模块不建议上来就放大手数。"],
+      ["#999", "SL_999", "700", "固定止损，单位微点。", "介于 #2588 和 #888 之间，风险也介于两者之间。"],
+      ["#999", "TP_999", "10000", "固定止盈，单位微点，偏安全网。", "实际出场通常受移动止盈影响更大。"],
+      ["#999", "TrailTrig_999", "280", "移动止盈启动距离。", "和主力模块一样偏早启动，更主动保护利润。"],
+      ["#999", "TrailDist_999", "50", "移动止盈回调距离。", "越小越紧，越大越宽。"],
+
+      ["#369", "En_369", "false", "是否启用 #369 补刀 M1 模块。", "开启后会增加一套 M1 入场机会，交易次数和风险都会上升。"],
+      ["#369", "Magic_369", "369", "模块的订单识别号。", "保持唯一即可。"],
+      ["#369", "Lots_369", "0.01", "每次开仓手数。", "补刀模块应比主力更谨慎，不建议更大手数。"],
+      ["#369", "SL_369", "500", "固定止损，单位微点。", "默认与 #2588 相同。"],
+      ["#369", "TP_369", "10000", "固定止盈，单位微点，偏安全网。", "默认与 #2588 相同。"],
+      ["#369", "TrailTrig_369", "280", "移动止盈启动距离。", "默认与 #2588 相同。"],
+      ["#369", "TrailDist_369", "50", "移动止盈回调距离。", "默认与 #2588 相同。"],
+
+      ["时间风控", "StartHour", "1", "允许交易的开始小时，按服务器时间。", "默认从 01:00 开始，避开 0 点附近。"],
+      ["时间风控", "StopHour", "0", "允许交易的结束小时。0 配合 StartHour=1 时，表示跨午夜运行到 23:59。", "如果想限制交易时段，可设置为大于 StartHour 的小时，例如 1 到 20。"],
+      ["时间风控", "MaxSpread", "50", "最大允许点差，单位微点。", "调小：点差过滤更严格，交易减少但成本更可控；调大：容易进场，但成本风险变高。"],
+      ["时间风控", "OrderNote", "策略备注", "订单注释，会写入订单备注栏。", "建议只填写策略名或内部标记，不要填写联系方式或敏感信息。"],
+
+      ["关口强平", "GateExitBuySL", "20000", "多单开盘价跌破下关口一定距离后强平。", "数值越小，越容易触发保护；默认很大，属于极端保护。"],
+      ["关口强平", "GateExitBuyTP", "20000", "多单开盘价突破上关口一定距离后强平。", "可以理解为价格远离原始关口后的强制退出条件。"],
+      ["关口强平", "GateExitSellSL", "20000", "空单开盘价突破上关口一定距离后强平。", "用于防止空单在极端反向突破中继续拖延。"],
+      ["关口强平", "GateExitSellTP", "20000", "空单开盘价跌破下关口一定距离后强平。", "用于空单远离原始关口后的强制退出。"],
+
+      ["日志面板", "LogCSV", "true", "是否写 CSV 日志。", "开启后会记录开仓、强平等事件，方便复盘。长期运行要注意文件大小。"],
+      ["日志面板", "ShowPanel", "true", "是否在图表左上角显示信息面板。", "开启方便观察关口、点差、持仓数量；关闭可减少图表占用。"]
+    ];
+
+    const moduleCopy = {
+      all: "全部参数",
+      "授权": "授权",
+      "关口模型": "关口模型",
+      "K线过滤": "K线过滤",
+      "入场区间": "入场区间",
+      "#2588": "#2588",
+      "#888": "#888",
+      "#999": "#999",
+      "#369": "#369",
+      "时间风控": "时间风控",
+      "关口强平": "关口强平",
+      "日志面板": "日志面板"
+    };
+
+    const grid = document.querySelector("#paramGrid");
+    const search = document.querySelector("#paramSearch");
+    const filter = document.querySelector("#paramFilter");
+
+    function renderParams() {
+      const q = search.value.trim().toLowerCase();
+      const f = filter.value;
+      const items = params.filter(([group, name, def, desc, adjust]) => {
+        const text = [group, name, def, desc, adjust].join(" ").toLowerCase();
+        return (f === "all" || group === f) && (!q || text.includes(q));
+      });
+
+      grid.innerHTML = items.map(([group, name, def, desc, adjust]) => `
+        <article class="param-card">
+          <header>
+            <div>
+              <p class="eyebrow" style="margin:0 0 4px">${group}</p>
+              <h4 class="param-name">${name}</h4>
+            </div>
+            <span class="param-default">默认 ${def}</span>
+          </header>
+          <p>${desc}</p>
+          <p class="adjust">${adjust}</p>
+        </article>
+      `).join("") || `<div class="info-block"><h4>没有匹配项</h4><p>换一个关键词或筛选条件。</p></div>`;
+    }
+
+    search.addEventListener("input", renderParams);
+    filter.addEventListener("change", renderParams);
+    renderParams();
+
+    function byId(id) { return document.getElementById(id); }
+    function num(id) { return Number(byId(id).value); }
+    function fixed(value, digits) {
+      if (!Number.isFinite(value)) return "-";
+      return value.toFixed(Math.max(0, Math.min(8, digits)));
+    }
+
+    function calculateGate(price, point, igm, fg, sg, digits) {
+      const numRound = Math.round(price / point / igm);
+      const base = numRound * igm * point;
+      const gates = [];
+      for (let n = -3; n <= 3; n++) {
+        gates.push(base + fg * point + n * igm * point);
+        gates.push(base + sg * point + n * igm * point);
+      }
+      gates.sort((a, b) => a - b);
+      let upper = 0, lower = 0;
+      for (let i = 0; i < gates.length; i++) {
+        if (gates[i] >= price) {
+          if (i > 0) {
+            upper = Number(gates[i].toFixed(digits));
+            lower = Number(gates[i - 1].toFixed(digits));
+          }
+          break;
+        }
+      }
+      return { upper, lower, gates };
+    }
+
+    function drawGateCanvas(data) {
+      const canvas = byId("gateCanvas");
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      const w = canvas.width;
+      const h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = "#fffdf7";
+      ctx.fillRect(0, 0, w, h);
+
+      if (!data.upper || !data.lower) return;
+
+      const visible = data.gates.filter(g => g >= data.lower - (data.upper - data.lower) * 2 && g <= data.upper + (data.upper - data.lower) * 2);
+      const min = Math.min(...visible, data.price);
+      const max = Math.max(...visible, data.price);
+      const scale = value => {
+        if (max === min) return w / 2;
+        return 50 + (value - min) / (max - min) * (w - 100);
+      };
+
+      ctx.strokeStyle = "rgba(23,32,29,.16)";
+      ctx.lineWidth = 1;
+      for (let i = 0; i < 8; i++) {
+        const x = 50 + i * ((w - 100) / 7);
+        ctx.beginPath();
+        ctx.moveTo(x, 28);
+        ctx.lineTo(x, h - 34);
+        ctx.stroke();
+      }
+
+      visible.forEach(g => {
+        const x = scale(g);
+        ctx.strokeStyle = Math.abs(g - data.upper) < 1e-9 || Math.abs(g - data.lower) < 1e-9 ? "#0e7c72" : "rgba(23,32,29,.38)";
+        ctx.lineWidth = Math.abs(g - data.upper) < 1e-9 || Math.abs(g - data.lower) < 1e-9 ? 4 : 2;
+        ctx.beginPath();
+        ctx.moveTo(x, 36);
+        ctx.lineTo(x, h - 44);
+        ctx.stroke();
+        ctx.fillStyle = "#17201d";
+        ctx.font = "18px Consolas, monospace";
+        ctx.textAlign = "center";
+        ctx.fillText(fixed(g, data.digits), x, h - 16);
+      });
+
+      const px = scale(data.price);
+      ctx.fillStyle = "#a83f2d";
+      ctx.beginPath();
+      ctx.arc(px, h / 2, 11, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#17201d";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.fillStyle = "#a83f2d";
+      ctx.font = "bold 18px Consolas, monospace";
+      ctx.textAlign = "center";
+      ctx.fillText("Price " + fixed(data.price, data.digits), px, h / 2 - 22);
+
+      ctx.fillStyle = "rgba(14,124,114,.12)";
+      const lowerX = scale(data.lower);
+      const upperX = scale(data.upper);
+      ctx.fillRect(lowerX, 74, upperX - lowerX, h - 148);
+    }
+
+    function updateCalc() {
+      const price = num("priceInput");
+      const point = num("pointInput");
+      const igm = num("igmInput");
+      const fg = num("fgInput");
+      const sg = num("sgInput");
+      const digits = num("digitsInput");
+      const buyUp = num("buyUpInput");
+      const sellLow = num("sellLowInput");
+
+      const result = calculateGate(price, point, igm, fg, sg, digits);
+      const distUp = result.upper ? (result.upper - price) / point : NaN;
+      const distLow = result.lower ? (price - result.lower) / point : NaN;
+      const buyOk = Number.isFinite(distUp) && distUp > 0 && distUp < buyUp;
+      const sellOk = Number.isFinite(distLow) && distLow > 0 && distLow < sellLow;
+
+      byId("upperOut").textContent = fixed(result.upper, digits);
+      byId("lowerOut").textContent = fixed(result.lower, digits);
+      byId("distUpOut").textContent = Number.isFinite(distUp) ? distUp.toFixed(1) + " 点" : "-";
+      byId("distLowOut").textContent = Number.isFinite(distLow) ? distLow.toFixed(1) + " 点" : "-";
+
+      const buySignal = byId("buySignal");
+      const sellSignal = byId("sellSignal");
+      buySignal.textContent = buyOk ? "BUY 区间：满足距离条件" : "BUY 区间：距离不满足";
+      sellSignal.textContent = sellOk ? "SELL 区间：满足距离条件" : "SELL 区间：距离不满足";
+      buySignal.className = "signal " + (buyOk ? "ok" : "no");
+      sellSignal.className = "signal " + (sellOk ? "ok" : "no");
+
+      drawGateCanvas({ ...result, price, digits });
+    }
+
+    byId("calcBtn").addEventListener("click", updateCalc);
+    ["priceInput", "pointInput", "igmInput", "fgInput", "sgInput", "digitsInput", "buyUpInput", "sellLowInput"].forEach(id => {
+      byId(id).addEventListener("input", updateCalc);
+    });
+    byId("resetCalc").addEventListener("click", () => {
+      byId("priceInput").value = "2350.120";
+      byId("pointInput").value = "0.01";
+      byId("igmInput").value = "800";
+      byId("fgInput").value = "600";
+      byId("sgInput").value = "60";
+      byId("digitsInput").value = "2";
+      byId("buyUpInput").value = "600";
+      byId("sellLowInput").value = "600";
+      updateCalc();
+    });
+    updateCalc();
+
+    document.querySelectorAll("#moduleTabs .tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll("#moduleTabs .tab").forEach(item => item.classList.remove("active"));
+        document.querySelectorAll(".module-card").forEach(item => item.classList.remove("active"));
+        tab.classList.add("active");
+        byId(tab.dataset.module).classList.add("active");
+      });
+    });
+
+    function updateLot() {
+      const equity = Number(byId("equityInput").value);
+      const riskPct = Number(byId("riskPctInput").value);
+      const slPts = Number(byId("slPtsInput").value);
+      const tickValue = Number(byId("tickValueInput").value);
+      const riskMoney = equity * riskPct / 100;
+      const lot = riskMoney / Math.max(1e-9, slPts * tickValue);
+      byId("lotResult").textContent = `按这些输入粗算，单笔风险约 ${riskMoney.toFixed(2)}，参考手数约 ${lot.toFixed(3)} 手。实际请以交易平台合约规格为准。`;
+    }
+    ["equityInput", "riskPctInput", "slPtsInput", "tickValueInput"].forEach(id => byId(id).addEventListener("input", updateLot));
+    updateLot();
+
+    const navLinks = [...document.querySelectorAll(".nav a")];
+    const sections = navLinks.map(a => document.querySelector(a.getAttribute("href"))).filter(Boolean);
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          navLinks.forEach(a => a.classList.toggle("active", a.getAttribute("href") === "#" + entry.target.id));
+        }
+      });
+    }, { rootMargin: "-30% 0px -60% 0px", threshold: 0 });
+    sections.forEach(section => observer.observe(section));
+  </script>
+</body>
+</html>
