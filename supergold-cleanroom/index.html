@@ -1,40 +1,199 @@
 <!doctype html>
-<html lang='zh-CN'>
+<html lang="zh-CN">
 <head>
-  <meta charset='utf-8'>
-  <meta name='viewport' content='width=device-width, initial-scale=1'>
-  <title>SuperGold CleanRoom EA</title>
-  <meta name='description' content='SuperGold CleanRoom EA，基于公开参数和可观察行为重写的 MT4 黄金网格策略说明页。'>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Super Gold V2.0 黄金策略 EA</title>
+  <meta name="description" content="Super Gold V2.0 黄金策略 EA 介绍页面，面向 XAUUSD 日内网格、篮子止盈、移动止损和每日盈利目标管理。">
   <style>
-    :root{--bg:#0c0d0b;--panel:#191a17;--paper:#f5f0e6;--ink:#11110f;--gold:#d7a84c;--gold2:#ffe2a1;--blue:#4f8dff;--green:#58c77a;--red:#ef655d;--muted:#aaa293;--line:rgba(255,226,161,.22);--white:#fff9eb}
-    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;color:var(--white);background:var(--bg);font-family:Microsoft YaHei,Segoe UI,sans-serif;line-height:1.72}a{color:inherit;text-decoration:none}.wrap{width:min(1120px,calc(100% - 32px));margin:auto}
-    nav{position:fixed;z-index:5;inset:0 0 auto;min-height:68px;background:rgba(12,13,11,.9);border-bottom:1px solid var(--line);backdrop-filter:blur(14px)}nav .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:13px 0}.brand{display:flex;align-items:center;gap:10px;font-weight:900}.mark{display:grid;place-items:center;width:36px;height:36px;border-radius:8px;color:#171006;background:linear-gradient(135deg,var(--gold2),var(--gold))}.links{display:flex;gap:16px;color:#ddd5c2;font-size:14px;white-space:nowrap}.links a:hover{color:var(--gold2)}
-    .hero{position:relative;min-height:92vh;display:grid;align-items:center;overflow:hidden;padding:112px 0 70px;background:radial-gradient(circle at 70% 20%,rgba(79,141,255,.18),transparent 30rem),#0c0d0b}.hero:before{content:'';position:absolute;inset:0;background:linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px);background-size:56px 56px;mask-image:linear-gradient(90deg,transparent,black 20%,black 78%,transparent)}.hero:after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(12,13,11,.98),rgba(12,13,11,.7),rgba(12,13,11,.2)),linear-gradient(180deg,transparent 68%,var(--bg))}.hero .wrap{position:relative;z-index:2}.tag{display:inline-flex;padding:8px 12px;border:1px solid var(--line);border-radius:8px;color:var(--gold2);background:rgba(255,226,161,.07);font-weight:900;font-size:13px}h1{max-width:900px;margin:22px 0 18px;color:#fff4d4;font-family:Georgia,serif;font-size:clamp(42px,8vw,90px);line-height:.98;letter-spacing:0}.lead{max-width:740px;margin:0;color:#d9d1bf;font-size:clamp(16px,2vw,20px)}.btns{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}.btn{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:0 18px;border:1px solid var(--line);border-radius:8px;font-weight:900}.primary{background:linear-gradient(135deg,var(--gold2),var(--gold));color:#171006}.ghost{background:rgba(255,255,255,.055)}
-    .chart{position:absolute;right:4vw;bottom:10vh;width:min(44vw,560px);height:330px;opacity:.52;z-index:1}.c{position:absolute;bottom:20px;width:12px;background:var(--green);box-shadow:0 0 28px currentColor}.c:before{content:'';position:absolute;left:5px;top:-40px;width:2px;height:calc(100% + 80px);background:currentColor}.r{background:var(--red);color:var(--red)}.g{color:var(--green)}.c1{left:4%;height:72px}.c2{left:16%;height:112px;bottom:54px}.c3{left:28%;height:86px;bottom:92px}.c4{left:40%;height:146px;bottom:72px}.c5{left:54%;height:110px;bottom:148px}.c6{left:68%;height:174px;bottom:118px}.c7{left:82%;height:132px;bottom:190px}
-    section{padding:78px 0;border-top:1px solid rgba(255,255,255,.08)}.light{background:var(--paper);color:var(--ink);border:0}.head{display:grid;grid-template-columns:minmax(260px,440px) 1fr;gap:36px;align-items:end;margin-bottom:28px}.k{margin:0 0 9px;color:var(--gold);font-size:13px;font-weight:900;text-transform:uppercase}.light .k{color:#9a6819}h2{margin:0;font-family:Georgia,serif;font-size:clamp(30px,5vw,54px);line-height:1.08;letter-spacing:0}.head p:last-child{margin:0;color:var(--muted)}.light .head p:last-child{color:#70695e}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.card{min-height:188px;padding:22px;border:1px solid rgba(255,255,255,.1);border-radius:8px;background:rgba(255,255,255,.045)}.light .card{border-color:rgba(17,17,15,.12);background:rgba(255,255,255,.72)}.card b{display:block;margin-bottom:10px;color:var(--gold2);font-size:18px}.light .card b{color:#8e5f13}.card p{margin:0;color:#c9c1b1;font-size:15px}.light .card p{color:#665f55}
-    .score{display:grid;grid-template-columns:1.1fr .9fr;gap:16px}.meterbox{padding:24px;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.045)}.row{display:grid;grid-template-columns:150px 1fr 58px;gap:10px;align-items:center;margin:12px 0;color:#d9d1bf}.bar{height:12px;border:1px solid rgba(255,255,255,.14);border-radius:99px;background:rgba(255,255,255,.055);overflow:hidden}.bar span{display:block;height:100%;background:linear-gradient(90deg,var(--blue),var(--green),var(--gold2))}.verdict{display:grid;align-content:center;padding:24px;border-radius:8px;color:#171006;background:linear-gradient(135deg,var(--gold2),var(--gold))}.verdict strong{font-size:clamp(44px,7vw,78px);line-height:1}.verdict span{font-weight:900}.note{color:#c7bead;font-size:14px}
-    .flow{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.13)}.step{min-height:142px;padding:18px;background:var(--panel)}.step em{display:block;margin-bottom:10px;color:var(--gold2);font-style:normal;font-weight:900}.step span{color:#c9c1b1;font-size:14px}
-    .tablewrap{overflow-x:auto;border:1px solid rgba(17,17,15,.14);background:#fffaf0;border-radius:8px}table{width:100%;min-width:760px;border-collapse:collapse;font-size:15px}th,td{padding:14px 15px;border-bottom:1px solid rgba(17,17,15,.12);text-align:left;vertical-align:top}th{color:#fff4d4;background:#171713}td:first-child{color:#8e5f13;font-weight:900}.risk{border-color:rgba(239,101,93,.32);background:rgba(239,101,93,.08)}.sources{display:grid;gap:8px;margin-top:18px;color:#d9d1bf;font-size:14px}.sources a{color:var(--gold2);text-decoration:underline;text-underline-offset:3px}.foot{padding:30px 0 40px;color:#aaa293;background:#090a08;font-size:13px}.reveal{opacity:0;transform:translateY(18px);transition:.65s}.show{opacity:1;transform:translateY(0)}
-    @media(max-width:900px){nav .wrap{align-items:flex-start;flex-direction:column}.links{max-width:100%;overflow-x:auto}.hero{padding-top:145px}.chart{display:none}.head,.grid,.score,.flow{grid-template-columns:1fr}.row{grid-template-columns:1fr;gap:6px}}@media(max-width:560px){.wrap{width:min(100% - 24px,1120px)}.btn{width:100%}section{padding:58px 0}}
+    :root{
+      --bg:#10100e;--panel:#1a1a16;--paper:#f6f0e4;--ink:#171511;--gold:#d2a349;--gold2:#ffe0a0;
+      --green:#53c27a;--red:#e5685e;--steel:#6fa8b8;--muted:#b8af9d;--line:rgba(255,224,160,.23);--white:#fff8ea;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;color:var(--white);background:var(--bg);font-family:"Microsoft YaHei","Noto Sans SC",Segoe UI,sans-serif;line-height:1.72}
+    a{color:inherit;text-decoration:none}
+    .wrap{width:min(1120px,calc(100% - 32px));margin:auto}
+    nav{position:fixed;z-index:5;inset:0 0 auto;background:rgba(16,16,14,.88);border-bottom:1px solid var(--line);backdrop-filter:blur(16px)}
+    nav .wrap{display:flex;align-items:center;justify-content:space-between;gap:18px;min-height:68px}
+    .brand{display:flex;align-items:center;gap:10px;font-weight:900;white-space:nowrap}
+    .mark{display:grid;place-items:center;width:36px;height:36px;border-radius:8px;color:#161006;background:linear-gradient(135deg,var(--gold2),var(--gold))}
+    .links{display:flex;gap:16px;color:#ded3bf;font-size:14px;white-space:nowrap}
+    .links a:hover{color:var(--gold2)}
+    .hero{position:relative;min-height:92vh;display:grid;align-items:center;overflow:hidden;padding:112px 0 72px;background:#10100e}
+    .hero:before{content:"";position:absolute;inset:0;background:
+      linear-gradient(90deg,rgba(16,16,14,.98),rgba(16,16,14,.7),rgba(16,16,14,.18)),
+      radial-gradient(circle at 74% 28%,rgba(255,224,160,.2),transparent 26rem),
+      radial-gradient(circle at 82% 76%,rgba(83,194,122,.12),transparent 22rem)}
+    .hero:after{content:"";position:absolute;right:0;bottom:0;width:min(54vw,650px);height:min(58vh,500px);background:
+      linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:58px 58px;mask-image:linear-gradient(90deg,transparent,black 20%,black)}
+    .hero .wrap{position:relative;z-index:2}
+    .tag{display:inline-flex;padding:8px 12px;border:1px solid var(--line);border-radius:8px;color:var(--gold2);background:rgba(255,224,160,.07);font-weight:900;font-size:13px}
+    h1{max-width:900px;margin:22px 0 18px;color:#fff4d6;font-family:Georgia,"Times New Roman",serif;font-size:clamp(42px,8vw,88px);line-height:1;letter-spacing:0}
+    .lead{max-width:760px;margin:0;color:#ddd4c2;font-size:clamp(16px,2vw,20px)}
+    .btns{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}
+    .btn{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:0 18px;border:1px solid var(--line);border-radius:8px;font-weight:900}
+    .primary{background:linear-gradient(135deg,var(--gold2),var(--gold));color:#171006}
+    .ghost{background:rgba(255,255,255,.055)}
+    .chart{position:absolute;right:4vw;bottom:11vh;width:min(44vw,560px);height:330px;z-index:1;opacity:.58}
+    .c{position:absolute;bottom:20px;width:12px;background:var(--green);box-shadow:0 0 28px currentColor}
+    .c:before{content:"";position:absolute;left:5px;top:-40px;width:2px;height:calc(100% + 80px);background:currentColor}
+    .r{background:var(--red);color:var(--red)}.g{color:var(--green)}
+    .c1{left:4%;height:72px}.c2{left:16%;height:112px;bottom:54px}.c3{left:28%;height:86px;bottom:92px}.c4{left:40%;height:146px;bottom:72px}.c5{left:54%;height:110px;bottom:148px}.c6{left:68%;height:174px;bottom:118px}.c7{left:82%;height:132px;bottom:190px}
+    section{padding:76px 0;border-top:1px solid rgba(255,255,255,.08)}
+    .light{background:var(--paper);color:var(--ink);border:0}
+    .head{display:grid;grid-template-columns:minmax(260px,430px) 1fr;gap:36px;align-items:end;margin-bottom:28px}
+    .k{margin:0 0 9px;color:var(--gold);font-size:13px;font-weight:900;text-transform:uppercase}
+    .light .k{color:#956513}
+    h2{margin:0;font-family:Georgia,"Times New Roman",serif;font-size:clamp(30px,5vw,54px);line-height:1.08;letter-spacing:0}
+    .head p:last-child{margin:0;color:var(--muted)}
+    .light .head p:last-child{color:#70695e}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    .card{min-height:178px;padding:22px;border:1px solid rgba(255,255,255,.1);border-radius:8px;background:rgba(255,255,255,.045)}
+    .light .card{border-color:rgba(17,17,15,.12);background:rgba(255,255,255,.72)}
+    .card b{display:block;margin-bottom:10px;color:var(--gold2);font-size:18px}
+    .light .card b{color:#8c5f16}
+    .card p{margin:0;color:#cfc5b4;font-size:15px}
+    .light .card p{color:#625b51}
+    .feature{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.13)}
+    .tile{min-height:150px;padding:20px;background:var(--panel)}
+    .tile em{display:block;margin-bottom:8px;color:var(--gold2);font-style:normal;font-weight:900}
+    .tile span{color:#d0c7b8;font-size:14px}
+    .tablewrap{overflow-x:auto;border:1px solid rgba(17,17,15,.14);background:#fffaf0;border-radius:8px}
+    table{width:100%;min-width:760px;border-collapse:collapse;font-size:15px}
+    th,td{padding:14px 15px;border-bottom:1px solid rgba(17,17,15,.12);text-align:left;vertical-align:top}
+    th{color:#fff4d4;background:#171713}
+    td:first-child{color:#8c5f16;font-weight:900}
+    .use{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .risk{border-color:rgba(229,104,94,.34);background:rgba(229,104,94,.08)}
+    .foot{padding:30px 0 40px;color:#aaa293;background:#090a08;font-size:13px}
+    .reveal{opacity:0;transform:translateY(18px);transition:.65s}
+    .show{opacity:1;transform:translateY(0)}
+    @media(max-width:900px){nav .wrap{align-items:flex-start;flex-direction:column;padding:12px 0}.links{max-width:100%;overflow-x:auto}.hero{padding-top:148px}.chart{display:none}.head,.grid,.feature,.use{grid-template-columns:1fr}}
+    @media(max-width:560px){.wrap{width:min(100% - 24px,1120px)}.btn{width:100%}section{padding:56px 0}}
   </style>
 </head>
 <body>
-  <nav><div class='wrap'><a class='brand' href='#top'><span class='mark'>SG</span><span>SuperGold CleanRoom EA</span></a><div class='links'><a href='#position'>定位</a><a href='#similarity'>相似度</a><a href='#logic'>流程</a><a href='#params'>参数</a><a href='#risk'>风险</a></div></div></nav>
-  <header id='top' class='hero'>
-    <div class='chart'><i class='c g c1'></i><i class='c g c2'></i><i class='c r c3'></i><i class='c g c4'></i><i class='c r c5'></i><i class='c g c6'></i><i class='c r c7'></i></div>
-    <div class='wrap reveal'><span class='tag'>MT4 · XAUUSD · Clean-room rebuild · Grid & basket TP</span><h1>Super Gold V2.0 思路的干净重写版。</h1><p class='lead'>这不是 EX4 反编译源码，而是根据公开参数、SET 文件、网上产品描述和可观察交易结构重新写出的 MT4 黄金策略框架。它保留 Super Gold V2.0 常见参数名，方便回测、调参和继续逼近原版行为。</p><div class='btns'><a class='btn primary' href='#similarity'>查看相似度评估</a><a class='btn ghost' href='#params'>查看参数表</a></div></div>
+  <nav>
+    <div class="wrap">
+      <a class="brand" href="#top"><span class="mark">SG</span><span>Super Gold V2.0</span></a>
+      <div class="links">
+        <a href="#position">策略定位</a>
+        <a href="#features">核心特点</a>
+        <a href="#params">参数</a>
+        <a href="#usage">使用建议</a>
+      </div>
+    </div>
+  </nav>
+
+  <header id="top" class="hero">
+    <div class="chart"><i class="c g c1"></i><i class="c g c2"></i><i class="c r c3"></i><i class="c g c4"></i><i class="c r c5"></i><i class="c g c6"></i><i class="c r c7"></i></div>
+    <div class="wrap reveal">
+      <span class="tag">MT4 · XAUUSD · 日内网格 · 篮子止盈</span>
+      <h1>Super Gold V2.0 黄金策略 EA</h1>
+      <p class="lead">面向 XAUUSD 的日内黄金交易系统，围绕交易时段过滤、价格行为入场、逆向网格补仓、篮子止盈、移动止损和每日盈利目标管理展开，适合用历史回测和小资金模拟逐步校准。</p>
+      <div class="btns">
+        <a class="btn primary" href="#features">查看策略特点</a>
+        <a class="btn ghost" href="#params">查看参数说明</a>
+      </div>
+    </div>
   </header>
+
   <main>
-    <section id='position' class='light'><div class='wrap'><div class='head reveal'><div><p class='k'>POSITIONING</p><h2>可继续打磨的同类策略底座。</h2></div><p>网上公开流通的 Super Gold V2.0 多为 EX4 和 SET 文件，未找到公开 MQ4 源码。CleanRoom 版本采用价格行为突破、逆向网格补仓、篮子止盈、隐藏止盈、移动止损、每日盈利目标和交易时段过滤。</p></div><div class='grid reveal'><article class='card'><b>参数名兼容</b><p>保留 Order、Risk、distanceOrder、distanceline、TimeStart、TimeEnd、UseHiddenTp、hiddenTakeprofit、TrailingStop、TrailingStep、TrailStart、DailyProfitTarget。</p></article><article class='card'><b>价格行为信号</b><p>默认用近期高低点突破触发首单，均线通道仅作为备用模式，更贴近公开资料中的 price action 描述。</p></article><article class='card'><b>可继续校准</b><p>后续可用原 EX4 策略测试报告逐步校准开仓点、加仓点、平仓点和日内暂停行为。</p></article></div></div></section>
-    <section id='similarity'><div class='wrap'><div class='head reveal'><div><p class='k'>SIMILARITY</p><h2>相似度只能评估行为，不能声称源码一致。</h2></div><p>没有原版 MQ4 源码，只能拿公开产品说明、文件包结构、SET 参数和 EX4 可运行行为作比较。下面是保守评估。</p></div><div class='score reveal'><div class='meterbox'><div class='row'><span>参数接口</span><div class='bar'><span style='width:92%'></span></div><b>92%</b></div><div class='row'><span>策略类别</span><div class='bar'><span style='width:72%'></span></div><b>72%</b></div><div class='row'><span>风控功能</span><div class='bar'><span style='width:64%'></span></div><b>64%</b></div><div class='row'><span>开仓细节</span><div class='bar'><span style='width:42%'></span></div><b>42%</b></div><div class='row'><span>源码相似</span><div class='bar'><span style='width:0%'></span></div><b>0%</b></div><p class='note'>综合行为相似度初评：约 55% 到 65%。参数层面接近，网格和篮子止盈方向接近；真正不确定的是原版首单信号、加仓过滤、日内重置和隐藏风控。</p></div><div class='verdict'><strong>60%</strong><span>当前更像可调的同类重写版，不是原版复制版。</span></div></div></div></section>
-    <section id='logic' class='light'><div class='wrap'><div class='head reveal'><div><p class='k'>TRADING LOOP</p><h2>策略流程清楚，方便回测定位差异。</h2></div><p>CleanRoom 版本把执行流程拆成五段，每一段都可以单独修改。</p></div><div class='flow reveal'><div class='step'><em>01</em><span>检查日期、交易时段、点差和每日盈利目标。</span></div><div class='step'><em>02</em><span>按价格行为突破或均线通道触发首单。</span></div><div class='step'><em>03</em><span>价格逆向移动 distanceOrder 后按规则加仓。</span></div><div class='step'><em>04</em><span>按隐藏止盈或可见篮子 TP 管理平仓。</span></div><div class='step'><em>05</em><span>移动止损、每日目标、隔日处理负责保护账户。</span></div></div></div></section>
-    <section id='params' class='light'><div class='wrap'><div class='head reveal'><div><p class='k'>PARAMETERS</p><h2>兼容 SET 文件的核心参数。</h2></div><p>新增参数主要用于控制魔术号、订单注释、首单信号、最大订单数和点差过滤。</p></div><div class='tablewrap reveal'><table><thead><tr><th>参数</th><th>默认值</th><th>说明</th></tr></thead><tbody><tr><td>Order</td><td>2</td><td>0 只做多，1 只做空，2 多空都做。</td></tr><tr><td>Risk</td><td>0.02</td><td>按余额计算基础手数，每 1000 余额对应 Risk 手。</td></tr><tr><td>distanceOrder</td><td>50</td><td>逆向加仓距离。</td></tr><tr><td>distanceline</td><td>50</td><td>首单入场触发距离。</td></tr><tr><td>TimeStart / TimeEnd</td><td>6 / 19</td><td>允许开新仓的服务器时间段。</td></tr><tr><td>UseHiddenTp</td><td>false</td><td>是否使用隐藏止盈。</td></tr><tr><td>hiddenTakeprofit</td><td>60</td><td>篮子均价止盈点数。</td></tr><tr><td>TrailingStop / TrailingStep</td><td>25 / 50</td><td>移动止损距离和最小推进步长。</td></tr><tr><td>DailyProfitTarget</td><td>1500.0</td><td>达到每日目标后平仓并暂停到次日。</td></tr><tr><td>OrderComment</td><td>SuperGold-CleanRoom</td><td>可修改订单注释。</td></tr><tr><td>SignalMode</td><td>0</td><td>0 价格行为突破，1 均线通道。</td></tr><tr><td>MaxOrdersPerSide</td><td>12</td><td>限制单方向最大持仓数。</td></tr></tbody></table></div></div></section>
-    <section id='risk'><div class='wrap'><div class='head reveal'><div><p class='k'>RISK NOTICE</p><h2>网格黄金 EA 必须先回测，再小资金实盘。</h2></div><p>这个版本是策略框架，不是收益承诺。黄金波动大，网格加仓会放大回撤，参数必须结合经纪商点差、杠杆、合约规格和账户资金做压力测试。</p></div><div class='grid reveal'><article class='card risk'><b>不保证等同原版</b><p>原版隐藏逻辑无法从 EX4 合法读取，因此开仓过滤和异常行情处理可能存在差异。</p></article><article class='card risk'><b>不建议直接重仓</b><p>先用原 SET 跑历史回测，再用小手数模拟。</p></article><article class='card risk'><b>源码可继续优化</b><p>可根据原 EX4 的策略测试报告继续调整首单、加仓、止盈和每日重置。</p></article></div><div class='sources'><div>参考：<a href='https://shopforexea.com/product/super-gold-ea/'>ShopForexEA Super Gold EA V2.0</a></div><div>参考：<a href='https://forexeastore.com/product/super-gold-ea/'>ForexEAstore Super Gold EA</a></div><div>线索：<a href='https://www.notandor.cn/52906.html'>notandor Super Gold V2.0_fix.ex4 文件列表</a></div></div></div></section>
+    <section id="position" class="light">
+      <div class="wrap">
+        <div class="head reveal">
+          <div>
+            <p class="k">POSITIONING</p>
+            <h2>黄金专用的日内网格策略。</h2>
+          </div>
+          <p>Super Gold V2.0 的核心思路是先限制交易窗口，再围绕黄金价格波动建立首单和补仓序列，通过篮子止盈与移动止损处理持仓利润，同时用每日盈利目标控制当天交易节奏。</p>
+        </div>
+        <div class="grid reveal">
+          <article class="card"><b>交易品种明确</b><p>主要服务于 XAUUSD。黄金波动大、点差和滑点敏感，策略参数需要围绕经纪商报价位数、合约规格和交易时段单独测试。</p></article>
+          <article class="card"><b>节奏偏日内</b><p>通过 TimeStart 与 TimeEnd 控制开新仓时间，避免全天候无差别进场，便于避开流动性不足或新闻风险较高的时段。</p></article>
+          <article class="card"><b>收益靠篮子管理</b><p>多单或空单序列按均价与目标距离统一管理，行情回拉到目标区域后整体止盈，减少单笔订单各自为战的问题。</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section id="features">
+      <div class="wrap">
+        <div class="head reveal">
+          <div>
+            <p class="k">FEATURES</p>
+            <h2>围绕黄金波动设计的关键功能。</h2>
+          </div>
+          <p>这类策略的重点不在单次预测，而在入场过滤、补仓间距、持仓均价、止盈方式和当天盈利目标之间的平衡。</p>
+        </div>
+        <div class="feature reveal">
+          <div class="tile"><em>01 方向控制</em><span>Order 可设置只做多、只做空或多空都做，方便根据账户风格和行情阶段切换。</span></div>
+          <div class="tile"><em>02 首单过滤</em><span>以价格行为和距离过滤减少随意开仓，避免在过窄震荡里连续触发。</span></div>
+          <div class="tile"><em>03 网格补仓</em><span>价格逆向移动达到 distanceOrder 后按规则补仓，核心风险来自单边行情的持仓扩张。</span></div>
+          <div class="tile"><em>04 篮子止盈</em><span>hiddenTakeprofit 可用于统一管理一组订单的目标利润，降低止盈位置暴露。</span></div>
+          <div class="tile"><em>05 移动止损</em><span>TrailingStop、TrailingStep 与 TrailStart 负责在已有浮盈后推进保护线。</span></div>
+          <div class="tile"><em>06 日目标</em><span>DailyProfitTarget 达到后停止当天继续交易，让收益目标和风险暴露更可控。</span></div>
+          <div class="tile"><em>07 点差意识</em><span>黄金策略对点差、滑点和执行速度敏感，实盘前需要加入经纪商环境测试。</span></div>
+          <div class="tile"><em>08 参数可调</em><span>手数、间距、时间、止盈和追踪参数都应结合回测结果分品种、分周期保存。</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="params" class="light">
+      <div class="wrap">
+        <div class="head reveal">
+          <div>
+            <p class="k">PARAMETERS</p>
+            <h2>常用参数说明。</h2>
+          </div>
+          <p>以下参数适合放在同一套回测模板里横向比较，重点观察最大回撤、连续补仓次数、单日浮亏和恢复速度。</p>
+        </div>
+        <div class="tablewrap reveal">
+          <table>
+            <thead><tr><th>参数</th><th>参考值</th><th>用途</th></tr></thead>
+            <tbody>
+              <tr><td>Order</td><td>2</td><td>0 只做多，1 只做空，2 多空都做。</td></tr>
+              <tr><td>Risk</td><td>0.05</td><td>控制基础手数或资金风险比例，建议从更低风险开始测试。</td></tr>
+              <tr><td>distanceOrder</td><td>50</td><td>逆向补仓距离，数值越小，补仓越密，回撤压力越大。</td></tr>
+              <tr><td>distanceline</td><td>50</td><td>首单触发距离，用于过滤过近的价格波动。</td></tr>
+              <tr><td>TimeStart / TimeEnd</td><td>6 / 19</td><td>允许开新仓的服务器时间窗口。</td></tr>
+              <tr><td>UseHiddenTp</td><td>false</td><td>是否使用隐藏止盈逻辑。</td></tr>
+              <tr><td>hiddenTakeprofit</td><td>60</td><td>篮子均价止盈点数，用于统一管理一组订单。</td></tr>
+              <tr><td>TrailingStop</td><td>25</td><td>移动止损距离，用于保护已经出现的浮动利润。</td></tr>
+              <tr><td>TrailingStep</td><td>50</td><td>移动止损推进步长，避免过度频繁修改订单。</td></tr>
+              <tr><td>TrailStart</td><td>0</td><td>启动追踪止损的最低盈利点数。</td></tr>
+              <tr><td>DailyProfitTarget</td><td>1500.0</td><td>每日盈利目标，达到后可停止当天新交易。</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="usage">
+      <div class="wrap">
+        <div class="head reveal">
+          <div>
+            <p class="k">USAGE</p>
+            <h2>先回测，再模拟，最后小资金验证。</h2>
+          </div>
+          <p>黄金网格 EA 的好坏不能只看盈利曲线，还要看极端单边行情、扩大点差、新闻跳空和连续补仓后的保证金占用。</p>
+        </div>
+        <div class="use reveal">
+          <article class="card"><b>测试建议</b><p>先用 99% 建模质量或真实 Tick 数据回测，分别测试默认参数、低风险参数、扩大点差参数和高波动月份，筛掉回撤过深的组合。</p></article>
+          <article class="card risk"><b>风险提示</b><p>网格补仓会在趋势单边时放大浮亏。任何参数都不等于收益承诺，实盘前应先跑模拟账户，并设置最大回撤或最大持仓限制。</p></article>
+        </div>
+      </div>
+    </section>
   </main>
-  <footer class='foot'><div class='wrap'>SuperGold CleanRoom EA 页面仅用于策略说明与开发记录，不提供投资建议，不承诺盈利。本版本为干净重写源码说明页，未使用 EX4 反编译代码。</div></footer>
+
+  <footer class="foot">
+    <div class="wrap">Super Gold V2.0 黄金策略 EA 页面仅用于策略介绍与测试说明，不构成投资建议，也不承诺收益。</div>
+  </footer>
   <script>
-    const ob=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('show')}),{threshold:.12});
-    document.querySelectorAll('.reveal').forEach(e=>ob.observe(e));
+    const ob=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting)entry.target.classList.add("show")}),{threshold:.12});
+    document.querySelectorAll(".reveal").forEach(el=>ob.observe(el));
   </script>
 </body>
 </html>
