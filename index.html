@@ -184,6 +184,29 @@
       color: var(--text);
     }
 
+    button.btn {
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .nav-button {
+      font-family: inherit;
+      cursor: pointer;
+      color: #d8d0bc;
+      padding: 8px 11px;
+      border: 1px solid transparent;
+      border-radius: 999px;
+      background: transparent;
+      transition: .18s ease;
+      font-size: 14px;
+    }
+
+    .nav-button:hover {
+      color: var(--gold-2);
+      border-color: rgba(255, 227, 160, .22);
+      background: rgba(255, 227, 160, .08);
+    }
+
     .terminal {
       position: relative;
       border: 1px solid var(--line);
@@ -303,9 +326,216 @@
       font-size: 14px;
     }
 
+    .card ul {
+      margin: 12px 0 0;
+      padding-left: 18px;
+      color: #c5c8c7;
+      font-size: 14px;
+    }
+
+    .card li + li {
+      margin-top: 6px;
+    }
+
+    .full-card {
+      grid-column: 1 / -1;
+    }
+
+    .map {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .map-card {
+      position: relative;
+      min-height: 220px;
+      padding: 18px;
+      border: 1px solid rgba(255,255,255,.09);
+      border-radius: 12px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.025));
+    }
+
+    .map-card::after {
+      content: "→";
+      position: absolute;
+      top: 50%;
+      right: -17px;
+      transform: translateY(-50%);
+      color: rgba(255, 227, 160, .62);
+      font-size: 24px;
+      font-weight: 900;
+    }
+
+    .map-card:last-child::after {
+      content: "";
+    }
+
+    .map-card small {
+      display: inline-flex;
+      margin-bottom: 10px;
+      padding: 4px 8px;
+      border: 1px solid rgba(255,227,160,.16);
+      border-radius: 999px;
+      color: var(--gold-2);
+      background: rgba(255,227,160,.06);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .map-card h3 {
+      margin: 0 0 10px;
+      font-size: 20px;
+      line-height: 1.25;
+    }
+
+    .map-card p {
+      margin: 0;
+      color: #c5c8c7;
+      font-size: 14px;
+    }
+
+    .map-card ul {
+      margin: 12px 0 0;
+      padding-left: 18px;
+      color: #c5c8c7;
+      font-size: 13px;
+    }
+
+    .map-card li + li {
+      margin-top: 5px;
+    }
+
+    .explain-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .explain-card {
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.02));
+      padding: 22px;
+    }
+
+    .explain-card h3 {
+      margin: 0 0 14px;
+      color: var(--gold-2);
+      font-size: 21px;
+    }
+
+    .explain-card p {
+      margin: 0 0 14px;
+      color: #cdd1cf;
+      font-size: 15px;
+    }
+
+    .explain-card dl {
+      margin: 0;
+      display: grid;
+      gap: 10px;
+    }
+
+    .explain-card dt {
+      color: #f5d98d;
+      font-weight: 900;
+    }
+
+    .explain-card dd {
+      margin: 3px 0 0;
+      color: #c4c8c7;
+      font-size: 14px;
+    }
+
+    .truth-table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 12px;
+      background: rgba(255,255,255,.03);
+    }
+
+    .truth-table th,
+    .truth-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(255,255,255,.07);
+      text-align: left;
+      vertical-align: top;
+      font-size: 14px;
+    }
+
+    .truth-table th {
+      color: var(--gold-2);
+      background: rgba(255,227,160,.06);
+      font-weight: 900;
+    }
+
+    .truth-table tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .truth-table td {
+      color: #cdd1cf;
+    }
+
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 0 10px;
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 999px;
+      color: #dce3e1;
+      background: rgba(255,255,255,.04);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .badge.good {
+      color: #c9ffdc;
+      border-color: rgba(116,217,159,.26);
+      background: rgba(116,217,159,.08);
+    }
+
+    .badge.warn {
+      color: #ffe5a8;
+      border-color: rgba(214,166,63,.34);
+      background: rgba(214,166,63,.08);
+    }
+
+    .badge.danger {
+      color: #ffd2d2;
+      border-color: rgba(255,122,122,.34);
+      background: rgba(255,122,122,.08);
+    }
+
+    .note-panel {
+      padding: 22px;
+      border: 1px solid rgba(214, 166, 63, .28);
+      border-radius: 12px;
+      background: rgba(214, 166, 63, .075);
+      color: #efd8a8;
+      font-size: 15px;
+    }
+
+    .note-panel b {
+      color: var(--gold-2);
+    }
+
     .flow {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
+      grid-template-columns: repeat(6, 1fr);
       gap: 10px;
     }
 
@@ -338,9 +568,117 @@
       font-weight: 800;
     }
 
+    .guide-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      display: none;
+      place-items: center;
+      padding: 24px;
+      background: rgba(0, 0, 0, .72);
+      backdrop-filter: blur(16px);
+    }
+
+    .guide-modal[aria-hidden="false"] {
+      display: grid;
+    }
+
+    .guide-card {
+      width: min(920px, 100%);
+      max-height: min(82vh, 820px);
+      overflow: auto;
+      border: 1px solid rgba(255, 227, 160, .2);
+      border-radius: 16px;
+      background:
+        linear-gradient(180deg, rgba(23, 27, 32, .98), rgba(9, 11, 13, .98));
+      box-shadow: 0 34px 120px rgba(0, 0, 0, .58);
+    }
+
+    .guide-head {
+      position: sticky;
+      top: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+      padding: 22px 24px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      background: rgba(14, 16, 18, .96);
+    }
+
+    .guide-head h2 {
+      margin: 0;
+      font-size: clamp(22px, 3vw, 32px);
+      line-height: 1.2;
+    }
+
+    .guide-close {
+      flex: 0 0 auto;
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 227, 160, .22);
+      background: rgba(255,255,255,.04);
+      color: var(--gold-2);
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    .guide-body {
+      padding: 24px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .guide-lead {
+      margin: 0;
+      color: #d4d6d3;
+      font-size: 16px;
+    }
+
+    .guide-block {
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 12px;
+      padding: 18px;
+      background: rgba(255,255,255,.035);
+    }
+
+    .guide-block h3 {
+      margin: 0 0 10px;
+      color: var(--gold-2);
+      font-size: 18px;
+    }
+
+    .guide-block ol,
+    .guide-block ul {
+      margin: 0;
+      padding-left: 22px;
+      color: #c9ccc9;
+    }
+
+    .guide-block li + li {
+      margin-top: 8px;
+    }
+
+    .guide-note {
+      color: #f4d5a0;
+      border-color: rgba(214, 166, 63, .32);
+      background: rgba(214, 166, 63, .08);
+    }
+
     @media (max-width: 920px) {
-      .hero, .grid, .flow {
+      .hero, .grid, .flow, .map, .explain-grid {
         grid-template-columns: 1fr;
+      }
+      .full-card {
+        grid-column: auto;
+      }
+      .map-card::after {
+        content: "↓";
+        top: auto;
+        right: 50%;
+        bottom: -22px;
+        transform: translateX(50%);
       }
       .section-title {
         display: block;
@@ -362,6 +700,13 @@
       main.shell {
         padding-top: 116px;
       }
+      .guide-modal {
+        padding: 12px;
+      }
+      .guide-head,
+      .guide-body {
+        padding: 18px;
+      }
     }
   </style>
 </head>
@@ -374,8 +719,13 @@
       </a>
       <div class="nav-links">
         <a href="#features">能力</a>
+        <a href="#architecture">架构</a>
         <a href="#workflow">流程</a>
+        <a href="#sentinel">哨兵</a>
+        <a href="#learning">学习</a>
         <a href="#risk">风险</a>
+        <button class="nav-button" type="button" data-open-guide>哨兵说明</button>
+        <button class="nav-button" type="button" data-open-learning>学习观察</button>
       </div>
     </nav>
   </header>
@@ -387,11 +737,14 @@
         <div class="eyebrow">MT5 黄金行情 · AI 多周期盯盘 · 中文交易员报告</div>
         <h1>让黄金盯盘从“盯屏幕”变成“看结论”。</h1>
         <p class="hero-copy">
-          匯鹰黄金 AI 盯盘中枢读取 MT5 的 XAUUSD 行情，自动生成 M5 / M15 / H1 图表、EMA结构、信号评分、风险判断和中文分析报告。它不自动下单，不承诺盈利，只做一件事：把盘面结构讲清楚。
+          匯鹰黄金 AI 盯盘中枢读取 MT5 的 XAUUSD 行情，自动生成 M5 / M15 / H1 图表、EMA结构、信号评分、风险判断和中文分析报告。哨兵模式负责危险环境防御，学习观察负责自动积累历史样本。系统不承诺盈利，核心目标是把盘面、风险和执行边界讲清楚。
         </p>
         <div class="actions">
           <a class="btn primary" href="#workflow">查看工作流程</a>
+          <a class="btn ghost" href="#architecture">看懂系统架构</a>
           <a class="btn ghost" href="#risk">阅读风险提示</a>
+          <button class="btn ghost" type="button" data-open-guide>哨兵使用说明</button>
+          <button class="btn ghost" type="button" data-open-learning>学习观察说明</button>
         </div>
       </div>
 
@@ -430,23 +783,181 @@
         <div class="card"><b>三周期图表</b><p>自动生成蜡烛图、EMA60、EMA144 和当前价线，双击可按屏幕大小预览，滚轮切换周期。</p></div>
         <div class="card"><b>AI 中文报告</b><p>按固定结构输出趋势、支撑压力、入场观察、风险提示、结论和量化评分。</p></div>
         <div class="card"><b>信号评分引擎</b><p>先由程序计算趋势一致性、动能、波动风险和交易适合度，再交给 AI 解读。</p></div>
+        <div class="card"><b>学习观察 V1</b><p>影子学习历史信号与验证结果，输出质量评分、成功概率和样本状态，先观察不接管交易。</p></div>
+        <div class="card"><b>哨兵模式</b><p>独立 Python 防御进程，输出危险等级和交易权限，EA 异常时默认保守，绝不默认放开马丁。</p></div>
         <div class="card"><b>企业微信推送</b><p>支持企业微信机器人文本或 Markdown 推送，Webhook 默认关闭，避免误发。</p></div>
         <div class="card"><b>本地授权交付</b><p>离线机器码授权，区分客户版和作者自用版，适合封测和早期销售。</p></div>
       </div>
     </section>
 
+    <section id="architecture">
+      <div class="section-title">
+        <h2>看懂这套系统，先看四个角色。</h2>
+        <p>主AI负责看盘，哨兵负责防御，学习观察负责积累经验，EA只负责执行权限。客户只要知道谁能控制交易，谁只是分析，就不容易混乱。</p>
+      </div>
+      <div class="map">
+        <div class="map-card">
+          <small>分析层</small>
+          <h3>主AI盯盘大脑</h3>
+          <p>调用 DeepSeek / OpenAI 这类大模型，负责读行情结构、写中文报告、生成交易观察观点。</p>
+          <ul>
+            <li>看 M5 / M15 / H1 多周期结构</li>
+            <li>解释趋势、支撑压力、风险点</li>
+            <li>生成交易信号和分析报告</li>
+          </ul>
+        </div>
+        <div class="map-card">
+          <small>防御层</small>
+          <h3>哨兵防御大脑</h3>
+          <p>独立 Python 进程，不调用大模型，按硬规则计算危险等级，输出 `hy_ai_command.json`。</p>
+          <ul>
+            <li>判断点差、ATR、EMA 偏离</li>
+            <li>识别多周期冲突和假突破</li>
+            <li>限制新开仓、加仓、马丁</li>
+          </ul>
+        </div>
+        <div class="map-card">
+          <small>学习层</small>
+          <h3>学习观察 V1</h3>
+          <p>软件启动后自动扫描本地历史样本，样本够就训练本地模型；样本不足时明确显示。</p>
+          <ul>
+            <li>读取历史信号和验证结果</li>
+            <li>输出影子质量评分</li>
+            <li>不接管 EA、不影响开仓</li>
+          </ul>
+        </div>
+        <div class="map-card">
+          <small>执行层</small>
+          <h3>EA执行层</h3>
+          <p>只读取交易信号和哨兵权限，决定是否允许执行，并执行账户日亏损风控。</p>
+          <ul>
+            <li>读取 `latest_trade_signal.json`</li>
+            <li>读取 `hy_ai_command.json`</li>
+            <li>异常时默认 caution 且禁止马丁</li>
+          </ul>
+        </div>
+      </div>
+      <div class="note-panel" style="margin-top:16px;">
+        <b>一句话总结：</b>主AI负责“看懂行情”，哨兵负责“危险时踩刹车”，学习观察负责“积累经验”，EA负责“按权限执行”。真实交易权限以 EA 风控和哨兵为准，学习观察永远不能绕过哨兵。
+      </div>
+    </section>
+
     <section id="workflow">
       <div class="section-title">
-        <h2>一轮分析，只做清晰的闭环。</h2>
-        <p>行情读取、图表、评分、AI报告、推送、追踪验证，全部围绕“这份分析有没有参考价值”。</p>
+        <h2>完整工作链路，从开软件到 EA 执行。</h2>
+        <p>产品不是一个按钮变魔法，而是几条 JSON 链路串起来。下面这条线就是客户每天实际会走的流程。</p>
       </div>
       <div class="flow">
-        <div class="step"><span>01</span><br>连接 MT5，读取黄金行情</div>
-        <div class="step"><span>02</span><br>生成 M5 / M15 / H1 图表</div>
-        <div class="step"><span>03</span><br>计算客观信号评分</div>
-        <div class="step"><span>04</span><br>输出中文 AI 交易员报告</div>
-        <div class="step"><span>05</span><br>记录并追踪后续市场结果</div>
+        <div class="step"><span>01</span><br>打开软件，学习观察自动扫描历史样本</div>
+        <div class="step"><span>02</span><br>连接 MT5，读取黄金 M5 / M15 / H1 行情</div>
+        <div class="step"><span>03</span><br>主AI生成中文分析报告和交易信号</div>
+        <div class="step"><span>04</span><br>哨兵读取行情，输出危险等级和权限 JSON</div>
+        <div class="step"><span>05</span><br>EA读取信号和哨兵权限，决定是否允许执行</div>
+        <div class="step"><span>06</span><br>追踪验证结果回流，学习观察继续积累样本</div>
       </div>
+      <div class="grid" style="margin-top:16px;">
+        <div class="card"><b>主系统输出</b><p>`latest_trade_signal.json` 保存最新交易信号，供 EA 读取。主系统也会保存报告、图表、追踪记录。</p></div>
+        <div class="card"><b>哨兵输出</b><p>`hy_ai_command.json` 保存危险等级和权限，告诉 EA 是否允许新开仓、加仓、马丁。</p></div>
+        <div class="card"><b>EA回写</b><p>`hy_ea_status.json` 回写执行层状态，后续可让哨兵和学习观察知道执行环境是否异常。</p></div>
+      </div>
+    </section>
+
+    <section id="sentinel">
+      <div class="section-title">
+        <h2>哨兵模式：不是预测涨跌，是防止危险环境乱动。</h2>
+        <p>哨兵是独立 Python 防御进程，EA 只读取它输出的权限。它不替代主AI，不写成交易策略，也不在 EA 内计算危险评分。</p>
+      </div>
+      <div class="explain-grid">
+        <div class="explain-card">
+          <h3>哨兵怎么判断危险</h3>
+          <p>哨兵读取 MT5 的 XAUUSD 行情，只使用已完成 K 线，统一把 ATR、点差、价格距离转成 points，避免 2 位/3 位黄金报价混乱。</p>
+          <dl>
+            <div><dt>行情波动</dt><dd>ATR_M5、ATR_M15 是否异常放大，避免剧烈波动时继续加仓。</dd></div>
+            <div><dt>价格偏离</dt><dd>Close 与 EMA60、EMA144 的距离是否过大，识别追高追空风险。</dd></div>
+            <div><dt>结构异常</dt><dd>连续大实体 K、多周期方向冲突、假突破信号都会增加危险分。</dd></div>
+            <div><dt>执行环境</dt><dd>点差突然扩大、EA 回写订单拒绝或滑点偏高时，也会提高危险等级。</dd></div>
+          </dl>
+        </div>
+        <div class="explain-card">
+          <h3>哨兵输出什么</h3>
+          <p>哨兵只输出防御命令，不开仓、不平仓、不读取账户盈亏。账户级风控仍由 EA 自己执行。</p>
+          <dl>
+            <div><dt>danger_score</dt><dd>0-100 的危险环境分数。</dd></div>
+            <div><dt>danger_level</dt><dd>normal、caution、danger、kill 四个等级。</dd></div>
+            <div><dt>permissions</dt><dd>是否允许新开仓、加仓、马丁、马丁降档。</dd></div>
+            <div><dt>reason / features</dt><dd>中文原因和关键特征，方便客户知道为什么被限制。</dd></div>
+          </dl>
+        </div>
+      </div>
+      <table class="truth-table" style="margin-top:16px;">
+        <thead>
+          <tr>
+            <th>危险等级</th>
+            <th>含义</th>
+            <th>EA 应执行的权限</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>normal</td><td>环境正常，危险分较低。</td><td>允许新开仓、允许加仓、允许马丁。</td></tr>
+          <tr><td>caution</td><td>有风险苗头，需要降低攻击性。</td><td>允许交易，但马丁降档，降低 lot_factor 和马丁倍数上限。</td></tr>
+          <tr><td>danger</td><td>危险环境，不适合继续扩张仓位。</td><td>禁止新开仓、禁止加仓、禁止马丁，只允许已有仓位风控动作。</td></tr>
+          <tr><td>kill</td><td>高危或熔断环境。</td><td>禁止新开仓、加仓、马丁，只保留移动止损、减仓、保本、平仓等防御动作。</td></tr>
+        </tbody>
+      </table>
+      <div class="badge-row">
+        <span class="badge good">升级立即生效</span>
+        <span class="badge warn">降级连续确认</span>
+        <span class="badge danger">异常默认 caution</span>
+        <span class="badge danger">异常禁止马丁</span>
+      </div>
+    </section>
+
+    <section id="learning">
+      <div class="section-title">
+        <h2>学习观察：自动学习历史样本，但不接管交易。</h2>
+        <p>学习观察不是第二个 EA，也不是让大模型直接下单。它的价值是把“历史信号到底有没有用”沉淀成可观察、可复盘、可迭代的本地学习结果。</p>
+      </div>
+      <div class="explain-grid">
+        <div class="explain-card">
+          <h3>打开软件后它会自动做什么</h3>
+          <p>软件启动后，学习观察会自动扫描本地历史文件，刷新学习状态。样本够就训练本地模型，样本不够就明确告诉客户“样本不足”。</p>
+          <dl>
+            <div><dt>读取历史信号</dt><dd>`tracking/signal_history.json`：过去生成过哪些 AI 信号。</dd></div>
+            <div><dt>读取验证结果</dt><dd>`tracking/signal_results.json`：这些信号后来被标记为有效、无效或中性。</dd></div>
+            <div><dt>读取当前信号</dt><dd>`trading/latest_trade_signal.json`：给最新信号做影子质量评分。</dd></div>
+            <div><dt>输出学习结果</dt><dd>`learning_brain/ai_learning_shadow.json`：保存学习状态、质量评分、成功概率、危险概率。</dd></div>
+          </dl>
+        </div>
+        <div class="explain-card">
+          <h3>它有没有用到大模型</h3>
+          <p>当前 V1 不使用大模型训练。大模型只用于主AI报告，学习观察使用本地历史样本做轻量学习，避免把交易控制权交给不可控解释。</p>
+          <dl>
+            <div><dt>主AI报告</dt><dd>使用 DeepSeek / OpenAI，负责中文行情分析。</dd></div>
+            <div><dt>哨兵模式</dt><dd>不使用大模型，使用硬规则评分。</dd></div>
+            <div><dt>学习观察</dt><dd>不使用大模型训练，使用本地样本做影子学习。</dd></div>
+            <div><dt>未来升级</dt><dd>可以加“大模型复盘解释”，但不能绕过哨兵和 EA 风控。</dd></div>
+          </dl>
+        </div>
+      </div>
+      <div class="grid" style="margin-top:16px;">
+        <div class="card"><b>怎么知道它在学习</b><p>看 `学习状态`、`样本概况`、`最近影子记录` 和 `ai_learning_shadow.json` 更新时间。每次启动或新信号生成后都会刷新。</p></div>
+        <div class="card"><b>什么时候算能训练</b><p>默认至少需要 30 条有效/无效样本，而且必须同时有有效样本和无效样本。只要样本不够，就明确显示样本不足。</p></div>
+        <div class="card"><b>它不控制什么</b><p>不接管 EA，不影响哨兵，不决定开仓，不允许绕过 `hy_ai_command.json`。它只是观察学习层。</p></div>
+      </div>
+      <table class="truth-table" style="margin-top:16px;">
+        <thead>
+          <tr>
+            <th>客户看到的状态</th>
+            <th>真实含义</th>
+            <th>下一步该做什么</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>样本不足</td><td>历史有效/无效样本没有达到训练门槛。</td><td>继续使用追踪验证，积累有效和无效样本。</td></tr>
+          <tr><td>类别不足</td><td>样本数量够了，但只有有效或只有无效，模型无法学会区分。</td><td>继续积累另一类样本。</td></tr>
+          <tr><td>已训练</td><td>本地模型已经用历史样本完成训练。</td><td>仍只做影子评分，先观察稳定性，不直接接管交易。</td></tr>
+        </tbody>
+      </table>
     </section>
 
     <section id="risk">
@@ -466,5 +977,180 @@
       <div>匯鹰黄金 AI 盯盘中枢仅作行情分析辅助，不构成投资建议。</div>
     </footer>
   </main>
+  <div class="guide-modal" id="sentinelGuide" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="sentinelGuideTitle">
+    <div class="guide-card">
+      <div class="guide-head">
+        <div>
+          <div class="eyebrow">哨兵模式 · 防御控制 · JSON 通讯</div>
+          <h2 id="sentinelGuideTitle">哨兵不是交易策略，是给 EA 加权限闸门。</h2>
+        </div>
+        <button class="guide-close" type="button" data-close-guide aria-label="关闭哨兵使用说明">×</button>
+      </div>
+      <div class="guide-body">
+        <p class="guide-lead">
+          哨兵模式会启动独立 Python 规则评分大脑，读取 MT5 黄金行情，按 ATR、EMA 偏离、点差、多周期冲突等规则计算危险等级，并输出 `hy_ai_command.json`。它不是大模型，也不和主盯盘 AI 共用模型；EA 只读取这个文件决定是否允许新开仓、加仓和马丁，EA 内不计算 danger_score。
+        </p>
+
+        <div class="guide-block">
+          <h3>它在总链路里的位置</h3>
+          <ul>
+            <li>主AI盯盘大脑：调用 DeepSeek / OpenAI，负责中文行情分析和交易观察观点。</li>
+            <li>哨兵防御大脑：不调用大模型，只负责危险环境评分和权限闸门。</li>
+            <li>学习观察 V1：只做历史样本影子评分，不参与实时权限控制。</li>
+            <li>EA执行层：只读取 JSON 权限和交易信号，最终执行账户风控。</li>
+          </ul>
+        </div>
+
+        <div class="guide-block">
+          <h3>第一次使用</h3>
+          <ol>
+            <li>打开桌面 `哨兵`。</li>
+            <li>主系统的 `立即分析`、`启动盯盘` 可照常使用。</li>
+            <li>点击左侧 `哨兵模式`，打开二级窗口。</li>
+            <li>在 `Files` 中填写 MT5 公共 Files 目录，通常是 `C:\Users\你的用户名\AppData\Roaming\MetaQuotes\Terminal\Common\Files`。</li>
+            <li>点击 `保存配置`，再点击 `启动哨兵`。</li>
+            <li>看到 `hy_ai_command.json` 正常更新后，再到 MT5 挂载 `HuiYingGoldAI_Executor V2.4 哨兵版`。</li>
+            <li>确认 EA 参数 `InpEnableSentinel=true`，并先用模拟账户验收。</li>
+            <li>确认 EA 的日亏损风控保持开启：2% 禁新开、4% 禁加仓/马丁、6% 停机。</li>
+          </ol>
+        </div>
+
+        <div class="guide-block">
+          <h3>MT5 公共 Files 目录怎么找</h3>
+          <ol>
+            <li>打开 MT5。</li>
+            <li>点击 `文件 -> 打开数据文件夹`。</li>
+            <li>回到上级目录，找到 `MetaQuotes\Terminal\Common\Files`。</li>
+            <li>把完整路径复制到哨兵窗口里的 `Files`。</li>
+          </ol>
+        </div>
+
+        <div class="guide-block">
+          <h3>四个危险等级</h3>
+          <ul>
+            <li>`normal`：允许新开仓、加仓和马丁。</li>
+            <li>`caution`：允许交易，但要求降低马丁强度。</li>
+            <li>`danger`：禁止新开仓、加仓和马丁，只允许已有仓位风控动作。</li>
+            <li>`kill`：高危环境，禁止新开仓、加仓和马丁，只允许已有仓位风控动作。</li>
+          </ul>
+        </div>
+
+        <div class="guide-block guide-note">
+          <h3>接入真实 EA 前必须验收</h3>
+          <ul>
+            <li>Python 哨兵能持续生成 `hy_ai_command.json`。</li>
+            <li>EA 能稳定读取 JSON，并原子回写 `hy_ea_status.json`。</li>
+            <li>删除 JSON 或关闭哨兵后，EA 必须默认 `caution`。</li>
+            <li>异常状态下 `allow_martingale=false`。</li>
+            <li>账户日亏损风控必须优先于哨兵权限生效。</li>
+            <li>五链路未全部通过，禁止接入真实 EA。</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="guide-modal" id="learningGuide" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="learningGuideTitle">
+    <div class="guide-card">
+      <div class="guide-head">
+        <div>
+          <div class="eyebrow">学习观察 V1 · 影子学习 · 商业化闭环</div>
+          <h2 id="learningGuideTitle">学习观察先积累样本，不直接控制交易。</h2>
+        </div>
+        <button class="guide-close" type="button" data-close-guide aria-label="关闭学习观察说明">×</button>
+      </div>
+      <div class="guide-body">
+        <p class="guide-lead">
+          学习观察 V1 是本地影子学习模块。它读取历史 AI 信号和后续验证结果，学习哪些信号结构更容易有效或失效，并输出 `ai_learning_shadow.json`。V1 不替代主 AI 报告、不替代哨兵、不控制 EA。
+        </p>
+
+        <div class="guide-block">
+          <h3>怎么使用</h3>
+          <ol>
+            <li>打开软件后，系统会自动扫描历史信号和验证结果，刷新学习状态。</li>
+            <li>点击左侧 `学习观察`，打开二级窗口。</li>
+            <li>查看质量评分、成功概率、危险概率、学习状态和样本数量。</li>
+            <li>如果显示 `样本不足`，继续使用追踪验证功能积累“有效/无效”样本。</li>
+            <li>后续点击 `立即分析` 或启动盯盘，学习观察会跟随新信号自动刷新。</li>
+            <li>点击 `立即影子评分` 可对最新交易信号手动重新评分。</li>
+          </ol>
+        </div>
+
+        <div class="guide-block">
+          <h3>有没有用到大模型</h3>
+          <ul>
+            <li>主AI报告会使用 DeepSeek / OpenAI 这类大模型。</li>
+            <li>哨兵防御大脑不使用大模型，是规则评分。</li>
+            <li>学习观察 V1 当前不使用大模型训练，是启动自动扫描的本地轻量学习。</li>
+            <li>后续商业版可以增加“大模型复盘解释”，但不能让大模型绕过哨兵和账户风控。</li>
+          </ul>
+        </div>
+
+        <div class="guide-block">
+          <h3>它学什么</h3>
+          <ul>
+            <li>AI建议、信号等级、综合评分、波动风险、方向倾向。</li>
+            <li>交易状态、是否允许交易、EMA距离、EMA60斜率、布林带扩张。</li>
+            <li>标签来自追踪验证：`有效` 为正样本，`无效` 为负样本，`中性` 暂不训练。</li>
+          </ul>
+        </div>
+
+        <div class="guide-block">
+          <h3>怎么知道它开始学习了</h3>
+          <ul>
+            <li>`学习状态` 显示样本不足、类别不足或已训练。</li>
+            <li>`样本概况` 显示可训练样本 / 总匹配样本。</li>
+            <li>`最近影子记录` 会持续记录每次影子评分。</li>
+            <li>`ai_learning_shadow.json` 更新时间会刷新。</li>
+            <li>达到默认 30 条有效/无效样本，且正负样本都存在后，才会进入本地已训练状态。</li>
+          </ul>
+        </div>
+
+        <div class="guide-block guide-note">
+          <h3>商业化边界</h3>
+          <ul>
+            <li>样本少时必须明确显示 `样本不足`，不能伪装成已训练模型。</li>
+            <li>学习观察 V1 只做影子评分，技术字段保持 `controls_ea=false`。</li>
+            <li>哨兵仍是最终防御层，危险环境下必须限制新开仓、加仓和马丁。</li>
+            <li>正式商业版需要积累真实成交结果、滑点、订单拒绝和止盈止损样本后再升级。</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const guide = document.getElementById("sentinelGuide");
+    const learningGuide = document.getElementById("learningGuide");
+    const openButtons = document.querySelectorAll("[data-open-guide]");
+    const openLearningButtons = document.querySelectorAll("[data-open-learning]");
+    const closeButtons = document.querySelectorAll("[data-close-guide]");
+
+    function openModal(target) {
+      target.setAttribute("aria-hidden", "false");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeModal(target) {
+      target.setAttribute("aria-hidden", "true");
+      document.body.style.overflow = "";
+    }
+
+    openButtons.forEach((button) => button.addEventListener("click", () => openModal(guide)));
+    openLearningButtons.forEach((button) => button.addEventListener("click", () => openModal(learningGuide)));
+    closeButtons.forEach((button) => {
+      button.addEventListener("click", () => closeModal(button.closest(".guide-modal")));
+    });
+    document.querySelectorAll(".guide-modal").forEach((modal) => {
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) {
+          closeModal(modal);
+        }
+      });
+    });
+    window.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        document.querySelectorAll('.guide-modal[aria-hidden="false"]').forEach(closeModal);
+      }
+    });
+  </script>
 </body>
 </html>
