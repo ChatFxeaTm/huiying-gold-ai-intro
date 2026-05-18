@@ -1032,6 +1032,7 @@
         <div class="card"><b>三周期图表</b><p>自动生成蜡烛图、EMA60、EMA144 和当前价线，双击可按屏幕大小预览，滚轮切换周期。</p></div>
         <div class="card"><b>AI 中文报告</b><p>按固定结构输出趋势、支撑压力、入场观察、风险提示、结论和量化评分，让盘面结论更容易阅读。</p></div>
         <div class="card"><b>信号评分引擎</b><p>程序先计算趋势一致性、动能、波动风险和交易适合度，再交给 AI 写成中文解释。</p></div>
+        <div class="card"><b>系统自检 / 验收中心</b><p>一键检查主AI、MT5、哨兵、EA、学习观察、报告日志和交付文件，直接给出通过、警告、失败和下一步。</p></div>
         <div class="card"><b>哨兵模式</b><p>独立 Python 防御进程，输出危险等级和交易权限；JSON 异常时 EA 默认保守，且禁止马丁。</p></div>
         <div class="card"><b>学习观察 V1</b><p>读取历史信号与验证结果，输出样本状态、质量评分和影子学习结果，只观察，不接管交易。</p></div>
         <div class="card"><b>企业微信推送</b><p>支持企业微信机器人文本或 Markdown 推送，Webhook 默认关闭，避免误发。</p></div>
@@ -1096,10 +1097,10 @@
           <p>这一段只讲怎么使用。主程序正常盯盘，哨兵和学习观察从二级入口进入，不挤占原本盯盘界面。</p>
       </div>
       <div class="flow">
-        <div class="step"><span>01</span><br>打开桌面主程序，先确认 MT5 和基础配置正常</div>
-        <div class="step"><span>02</span><br>点击立即分析或启动盯盘，主AI生成报告和图表</div>
-        <div class="step"><span>03</span><br>进入哨兵模式，配置 MT5 公共 Files 目录并启动</div>
-        <div class="step"><span>04</span><br>查看 danger_score、danger_level 和交易权限</div>
+        <div class="step"><span>01</span><br>打开桌面主程序，先进入系统自检确认基础链路</div>
+        <div class="step"><span>02</span><br>按自检提示修复 AI Key、MT5 连接和 Files 目录</div>
+        <div class="step"><span>03</span><br>点击立即分析或启动盯盘，主AI生成报告和图表</div>
+        <div class="step"><span>04</span><br>进入哨兵模式，查看危险等级和交易权限</div>
         <div class="step"><span>05</span><br>进入学习观察，查看样本数量、训练状态和影子评分</div>
         <div class="step"><span>06</span><br>MT5 EA 同时读取交易信号和哨兵权限，异常默认保守</div>
       </div>
