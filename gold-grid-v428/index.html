@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>黄金双向循环网格策略 v4.28｜策略逻辑介绍</title>
+  <meta name="description" content="汇交易策略研发中心：黄金双向循环网格策略 v4.28 逻辑说明。">
+  <style>
+    :root{--ink:#17201f;--muted:#66736f;--paper:#f7f2e8;--panel:#fffaf1;--line:#ded1ba;--gold:#b9822f;--deep:#101816;--green:#2f7d62;--red:#a5483f;--cyan:#2b7286}
+    *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:"Noto Serif SC","Microsoft YaHei","PingFang SC",serif;line-height:1.75} .wrap{width:min(1120px,calc(100% - 40px));margin:auto}
+    .hero{min-height:90vh;background:linear-gradient(90deg,rgba(16,24,22,.94),rgba(16,24,22,.76)),repeating-linear-gradient(135deg,rgba(255,255,255,.08) 0 1px,transparent 1px 18px),#101816;color:#fff8e9;display:grid;align-items:center;border-bottom:7px solid var(--gold)}
+    .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:44px;align-items:center;padding:86px 0 76px}.eyebrow{display:inline-block;color:#f1c56e;border:1px solid rgba(241,197,110,.42);padding:7px 12px;margin-bottom:26px;background:rgba(255,255,255,.04);font-size:14px}
+    h1{font-size:clamp(40px,7vw,78px);line-height:1.04;margin:0;font-weight:900}.lead{font-size:clamp(18px,2.2vw,24px);color:#e5d8bd;margin:24px 0 0}.hero-points{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:34px}.hero-point{border-left:3px solid var(--gold);background:rgba(255,255,255,.055);padding:13px 14px;min-height:84px}.hero-point strong{display:block;font-size:17px}.hero-point span{display:block;font-size:13px;color:#cfc4ae;margin-top:4px}
+    .chart{border:1px solid rgba(241,197,110,.34);background:#0d1312;padding:18px;box-shadow:0 18px 60px rgba(0,0,0,.32)}.chart svg{width:100%;height:auto;display:block;background:#fffaf1;border:1px solid rgba(255,255,255,.12)}.chart p{font-size:13px;color:#cfc4ae;margin:12px 0 0}
+    section{padding:72px 0;border-bottom:1px solid var(--line)}.dark{background:var(--deep);color:#fff8e9;border:0}.title{display:grid;grid-template-columns:250px 1fr;gap:34px;margin-bottom:36px}.title h2{font-size:clamp(28px,4vw,44px);line-height:1.16;margin:0}.title p{font-size:18px;color:var(--muted);margin:5px 0 0}.dark .title p,.dark .muted{color:#cfc4ae}
+    .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}.card{background:var(--panel);border:1px solid var(--line);padding:24px}.dark .card{background:#16211f;border-color:rgba(241,197,110,.24)}.card h3{font-size:22px;line-height:1.28;margin:0 0 10px}.card p{margin:0;color:var(--muted)}.dark .card p{color:#d6cbb8}.tag{display:inline-block;color:#7a4e16;background:#f2dfb7;border:1px solid #d9b772;font-size:13px;padding:4px 8px;margin-bottom:14px;font-weight:800}
+    .flow{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;counter-reset:f}.step{background:#fffaf1;border:1px solid var(--line);padding:18px;min-height:150px}.step:before{counter-increment:f;content:counter(f);display:inline-grid;place-items:center;width:30px;height:30px;background:var(--deep);color:#fff8e9;font-weight:900;margin-bottom:16px}.step strong{display:block;font-size:18px;line-height:1.28;margin-bottom:8px}.step span{display:block;color:var(--muted);font-size:15px}
+    .formula{background:#111a18;color:#fff8e9;border-left:5px solid var(--gold);padding:28px;font-family:Consolas,"Courier New",monospace;overflow:auto;line-height:1.9}.formula b{color:#f1c56e}.table{width:100%;border-collapse:collapse;background:#fffaf1;border:1px solid var(--line);margin-top:22px}.table th,.table td{border-bottom:1px solid var(--line);padding:15px 18px;text-align:left;vertical-align:top}.table th{width:220px;color:#7a4e16;background:#f2dfb7}
+    .risk{background:#2a1513;color:#ffece7;border:1px solid #80372f;padding:30px}.risk h2{font-size:clamp(28px,4vw,42px);margin:0 0 18px}.risk p{color:#f2cbc5;margin:0 0 14px}.risk li,.list li{margin:9px 0}.footer{background:#0b100f;color:#d8ccb5;padding:30px 0;font-size:14px}.footer strong{color:#f1c56e}
+    @media(max-width:900px){.hero-grid,.title,.grid3,.grid2,.flow{grid-template-columns:1fr}.hero-points{grid-template-columns:1fr}section{padding:54px 0}}
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <div class="eyebrow">汇交易策略研发中心 · 黄金智能交易策略说明</div>
+        <h1>黄金双向循环网格策略 v4.28</h1>
+        <p class="lead">面向 XAUUSD / XAUUSD.e 的双向独立循环网格逻辑。策略不把核心放在预测单边方向，而是围绕黄金日内波动，分别管理多单篮子和空单篮子，用加权均价止盈完成循环。</p>
+        <div class="hero-points">
+          <div class="hero-point"><strong>双向独立</strong><span>Buy 与 Sell 两套引擎互不干扰，各自启动、加仓、止盈、重启。</span></div>
+          <div class="hero-point"><strong>均价止盈</strong><span>同方向多张订单共用一个加权均价 TP，主要由订单自身 TP 平仓。</span></div>
+          <div class="hero-point"><strong>动态间距</strong><span>默认使用 ATR 调整加仓距离，适应黄金波动放大或收缩。</span></div>
+        </div>
+      </div>
+      <aside class="chart">
+        <svg viewBox="0 0 720 360" role="img" aria-label="策略循环曲线示意">
+          <defs><pattern id="g" width="48" height="36" patternUnits="userSpaceOnUse"><path d="M48 0H0V36" fill="none" stroke="#ded1ba" stroke-width="1"/></pattern></defs>
+          <rect width="720" height="360" fill="#fffaf1"/><rect width="720" height="360" fill="url(#g)"/>
+          <path d="M36 292 C90 286,117 276,150 269 S215 247,250 240 S315 224,358 214 S430 192,466 184 S514 159,544 145 S604 127,684 108" fill="none" stroke="#1f58c7" stroke-width="5"/>
+          <path d="M130 270 l16 26 l18 -37 M482 184 l18 64 l30 -93 M642 122 l13 24 l20 -42" fill="none" stroke="#1f58c7" stroke-width="5"/>
+          <text x="36" y="52" fill="#17201f" font-size="22" font-weight="700">循环释放示意</text>
+          <text x="36" y="82" fill="#66736f" font-size="15">示意图用于说明策略形态，不代表未来收益承诺</text>
+        </svg>
+        <p>策略依赖价格波动回归完成释放；曲线仅为运行形态示意。</p>
+      </aside>
+    </div>
+  </header>
+
+  <section><div class="wrap">
+    <div class="title"><h2>策略定位</h2><p>这套策略适合让客户先理解“它如何工作”，而不是只看一组参数或收益图。核心关键词是：黄金、双向、循环、网格、均价 TP、风险边界。</p></div>
+    <div class="grid3">
+      <article class="card"><span class="tag">交易品种</span><h3>黄金专用适配</h3><p>策略按黄金价格习惯处理点值：100 微点等于 1.00 美金，可兼容两位报价和三位报价的 XAUUSD / XAUUSD.e。</p></article>
+      <article class="card"><span class="tag">运行方式</span><h3>不是单向追涨杀跌</h3><p>默认多空双向运行。行情上涨时，多单篮子可能先止盈；行情下跌时，空单篮子可能先止盈。</p></article>
+      <article class="card"><span class="tag">出场方式</span><h3>以 TP 成交为主</h3><p>同方向订单的止盈价写入订单自身 TP，减少隐藏式人工篮子平仓，让回测和实盘记录更清楚。</p></article>
+    </div>
+  </div></section>
+
+  <section class="dark"><div class="wrap">
+    <div class="title"><h2>核心逻辑</h2><p>客户最需要理解的是：这不是一个只做多或只做空的 EA，而是多头篮子和空头篮子各自循环的系统。</p></div>
+    <div class="grid3">
+      <article class="card"><span class="tag">01</span><h3>空仓启动</h3><p>交易方向为多空双向时，空仓启动后分别建立 Buy 首单和 Sell 首单，默认首单手数为 0.01。</p></article>
+      <article class="card"><span class="tag">02</span><h3>独立循环</h3><p>Buy 篮子止盈后，下一轮 Buy 从首单手数重新开始；Sell 仍有持仓时也不会阻止 Buy 重启，反之亦然。</p></article>
+      <article class="card"><span class="tag">03</span><h3>同向加仓</h3><p>已有同方向持仓后，策略才进入加仓逻辑。加仓可来自盈利方向延伸，也可来自亏损方向拉均价。</p></article>
+      <article class="card"><span class="tag">04</span><h3>动态距离</h3><p>加仓距离默认跟随 ATR 波动。行情平稳时距离相对紧，波动扩大时距离自然放宽。</p></article>
+      <article class="card"><span class="tag">05</span><h3>手数控制</h3><p>新循环首单回到 0.01；篮子内加仓才按当前 EA 总订单数放大，并受单笔最大手数限制。</p></article>
+      <article class="card"><span class="tag">06</span><h3>共同止盈</h3><p>同方向所有订单会被调整到同一个加权均价 TP。价格回到目标位置，该方向篮子同步释放。</p></article>
+    </div>
+  </div></section>
+
+  <section><div class="wrap">
+    <div class="title"><h2>一轮交易如何完成</h2><p>真实行情中 Buy 和 Sell 两条线会同时存在，但每条线都按同一套循环规则运行。</p></div>
+    <div class="flow">
+      <div class="step"><strong>建立首单</strong><span>某方向没有持仓时，重新用首单手数启动一轮循环。</span></div>
+      <div class="step"><strong>等待波动</strong><span>价格向盈利或亏损方向移动，达到距离条件后触发下一单。</span></div>
+      <div class="step"><strong>计算均价</strong><span>把同方向所有订单按手数加权，得到当前篮子的真实成本区。</span></div>
+      <div class="step"><strong>统一 TP</strong><span>多单 TP 放在均价上方，空单 TP 放在均价下方。</span></div>
+      <div class="step"><strong>止盈重启</strong><span>篮子完成 TP 后，该方向清空，并从首单手数重新开始。</span></div>
+    </div>
+  </div></section>
+
+  <section><div class="wrap">
+    <div class="title"><h2>均价 TP 机制</h2><p>策略的关键不是每一张单各走各的，而是同方向订单形成一个“篮子”。篮子用加权均价作为成本，再加上目标盈利距离。</p></div>
+    <div class="formula">BuyAvg = Σ(Buy开仓价 × Buy手数) / Σ(Buy手数)<br>BuyTP = BuyAvg + <b>100微点</b> = BuyAvg + <b>1.00美金</b><br><br>SellAvg = Σ(Sell开仓价 × Sell手数) / Σ(Sell手数)<br>SellTP = SellAvg - <b>100微点</b> = SellAvg - <b>1.00美金</b></div>
+    <table class="table"><tr><th>示例</th><td>Buy 0.01 at 4733.25，Buy 0.03 at 4730.56，Buy 0.04 at 4728.31。</td></tr><tr><th>加权均价</th><td>约 4729.77。</td></tr><tr><th>共同止盈</th><td>默认 100 微点时，共同 TP 约 4730.77。</td></tr></table>
+  </div></section>
+
+  <section class="dark"><div class="wrap">
+    <div class="title"><h2>风控结构</h2><p>网格策略的生命线不是“永远不亏”，而是清楚知道持仓如何增加、何时限制、何时保护浮盈、何时停止扩张。</p></div>
+    <div class="grid2">
+      <article class="card"><h3>订单与手数边界</h3><p>内置单方向最大订单数、EA 总最大订单数、单方向最大手数和单笔最大手数限制。报表还原默认单笔最大 0.10，也可按账户承受能力调为 0.05。</p></article>
+      <article class="card"><h3>整体浮盈回撤保护</h3><p>当当前品种与 Magic 的总浮盈达到启动金额后，策略记录最高浮盈；若之后回撤达到设定金额，则尝试平掉本策略订单。</p></article>
+      <article class="card"><h3>单向清仓止损</h3><p>Buy 或 Sell 某一侧浮亏达到阈值时，可以只清理该方向订单。默认阈值较大，实盘应按资金规模重新设置。</p></article>
+      <article class="card"><h3>保守解套模块</h3><p>总浮亏进入指定区域后，策略可以寻找盈利最大单与亏损最大单，在合并净利润满足条件时配对平仓。</p></article>
+    </div>
+  </div></section>
+
+  <section><div class="wrap">
+    <div class="title"><h2>适合与不适合的行情</h2><p>任何循环网格系统都需要市场波动来完成释放，也害怕极端单边和流动性异常。</p></div>
+    <div class="grid2">
+      <div class="card"><h3>相对适合</h3><ul class="list"><li>黄金日内有来回波动，价格经常回到均价区域。</li><li>点差稳定、滑点可控、交易环境连续。</li><li>账户资金充足，手数、最大订单数和回撤阈值设置保守。</li></ul></div>
+      <div class="card"><h3>需要谨慎</h3><ul class="list"><li>重要数据公布前后，黄金快速单边拉升或跳水。</li><li>点差突然扩大、报价中断、流动性变差。</li><li>账户杠杆过高，或者把最大手数、最大订单数放得过大。</li></ul></div>
+    </div>
+  </div></section>
+
+  <section><div class="wrap risk">
+    <h2>风险提醒</h2>
+    <p>本资料由汇交易策略研发中心整理，用于说明策略逻辑和参数含义，不构成任何投资建议、收益承诺或代客理财承诺。</p>
+    <ul>
+      <li>网格、循环加仓、均价止盈类策略在震荡行情中可能表现平滑，但在强单边行情中可能出现连续加仓、浮亏扩大、保证金压力上升，极端情况下可能导致爆仓。</li>
+      <li>历史回测、历史报表和示意曲线只能说明过去样本下的运行结果，不代表未来实盘一定盈利。</li>
+      <li>客户应根据账户资金、杠杆、点差、滑点、交易时段和自身风险承受能力，独立设置最大手数、最大订单数、止损线和暂停交易规则。</li>
+      <li>建议先使用模拟盘或小资金账户观察足够长时间，再决定是否实盘使用；任何实盘交易风险均由使用者自行承担。</li>
+    </ul>
+  </div></section>
+
+  <footer class="footer"><div class="wrap"><strong>汇交易策略研发中心</strong> · 黄金双向循环网格策略 v4.28 说明页 · 面向 XAUUSD / XAUUSD.e 的双向独立循环网格策略逻辑介绍</div></footer>
+</body>
+</html>
