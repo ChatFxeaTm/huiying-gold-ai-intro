@@ -898,10 +898,8 @@
         </p>
         <div class="actions">
           <a class="btn primary" href="#workmap">先看工作导图</a>
-          <a class="btn primary" href="#workflow">查看工作流程</a>
-          <a class="btn ghost" href="#architecture">看懂系统架构</a>
-          <a class="btn ghost" href="#risk">阅读风险提示</a>
-          <button class="btn ghost" type="button" data-open-guide>哨兵使用说明</button>
+          <a class="btn ghost" href="#workflow">查看使用顺序</a>
+          <button class="btn ghost" type="button" data-open-guide>哨兵说明</button>
           <button class="btn ghost" type="button" data-open-learning>学习观察说明</button>
         </div>
       </div>
@@ -1026,16 +1024,16 @@
 
     <section id="features">
       <div class="section-title">
-        <h2>不是喊单工具，是黄金盘面解释器。</h2>
-        <p>第一版重点放在分析、推送、复盘和交付稳定性，把自动下单这类高责任功能先放在后面。</p>
+        <h2>功能分层：看盘、报告、防御、学习、交付。</h2>
+        <p>这一段只讲软件能做什么。主界面负责盯盘和报告，二级入口承载哨兵与学习观察，执行权限通过 JSON 交给 MT5 EA 判断。</p>
       </div>
       <div class="grid">
-        <div class="card"><b>自动读取 MT5 行情</b><p>读取 XAUUSD 的 M5、M15、H1 K线，保存 JSON，生成本地行情记录。</p></div>
+        <div class="card"><b>行情采集</b><p>读取 XAUUSD 的 M5、M15、H1 K线，保存本地行情 JSON，为图表、报告和哨兵评分提供统一数据源。</p></div>
         <div class="card"><b>三周期图表</b><p>自动生成蜡烛图、EMA60、EMA144 和当前价线，双击可按屏幕大小预览，滚轮切换周期。</p></div>
-        <div class="card"><b>AI 中文报告</b><p>按固定结构输出趋势、支撑压力、入场观察、风险提示、结论和量化评分。</p></div>
-        <div class="card"><b>信号评分引擎</b><p>先由程序计算趋势一致性、动能、波动风险和交易适合度，再交给 AI 解读。</p></div>
-        <div class="card"><b>学习观察 V1</b><p>影子学习历史信号与验证结果，输出质量评分、成功概率和样本状态，先观察不接管交易。</p></div>
-        <div class="card"><b>哨兵模式</b><p>独立 Python 防御进程，输出危险等级和交易权限，EA 异常时默认保守，绝不默认放开马丁。</p></div>
+        <div class="card"><b>AI 中文报告</b><p>按固定结构输出趋势、支撑压力、入场观察、风险提示、结论和量化评分，让盘面结论更容易阅读。</p></div>
+        <div class="card"><b>信号评分引擎</b><p>程序先计算趋势一致性、动能、波动风险和交易适合度，再交给 AI 写成中文解释。</p></div>
+        <div class="card"><b>哨兵模式</b><p>独立 Python 防御进程，输出危险等级和交易权限；JSON 异常时 EA 默认保守，且禁止马丁。</p></div>
+        <div class="card"><b>学习观察 V1</b><p>读取历史信号与验证结果，输出样本状态、质量评分和影子学习结果，只观察，不接管交易。</p></div>
         <div class="card"><b>企业微信推送</b><p>支持企业微信机器人文本或 Markdown 推送，Webhook 默认关闭，避免误发。</p></div>
         <div class="card"><b>本地授权交付</b><p>离线机器码授权，区分标准版和作者维护版，适合封测、授权和早期交付。</p></div>
       </div>
@@ -1043,80 +1041,79 @@
 
     <section id="architecture">
       <div class="section-title">
-        <h2>看懂这套系统，先看四个角色。</h2>
-        <p>主AI负责看盘，哨兵负责防御，学习观察负责积累经验，EA只负责执行权限。谁能控制交易、谁只是分析，必须一眼看清。</p>
+        <h2>模块边界：谁分析，谁拦截，谁观察，谁执行。</h2>
+        <p>这一段只讲权限边界。主AI可以给观点，哨兵可以限制权限，学习观察只能沉淀经验，EA才是最终执行层。</p>
       </div>
-      <div class="map">
-        <div class="map-card">
-          <small>分析层</small>
-          <h3>主AI盯盘大脑</h3>
-          <p>调用 DeepSeek / OpenAI 这类大模型，负责读行情结构、写中文报告、生成交易观察观点。</p>
-          <ul>
-            <li>看 M5 / M15 / H1 多周期结构</li>
-            <li>解释趋势、支撑压力、风险点</li>
-            <li>生成交易信号和分析报告</li>
-          </ul>
-        </div>
-        <div class="map-card">
-          <small>防御层</small>
-          <h3>哨兵防御大脑</h3>
-          <p>独立 Python 进程，不调用大模型，按硬规则计算危险等级，输出 `hy_ai_command.json`。</p>
-          <ul>
-            <li>判断点差、ATR、EMA 偏离</li>
-            <li>识别多周期冲突和假突破</li>
-            <li>限制新开仓、加仓、马丁</li>
-          </ul>
-        </div>
-        <div class="map-card">
-          <small>学习层</small>
-          <h3>学习观察 V1</h3>
-          <p>软件启动后自动扫描本地历史样本，样本够就训练本地模型；样本不足时明确显示。</p>
-          <ul>
-            <li>读取历史信号和验证结果</li>
-            <li>输出影子质量评分</li>
-            <li>不接管 EA、不影响开仓</li>
-          </ul>
-        </div>
-        <div class="map-card">
-          <small>执行层</small>
-          <h3>EA执行层</h3>
-          <p>只读取交易信号和哨兵权限，决定是否允许执行，并执行账户日亏损风控。</p>
-          <ul>
-            <li>读取 `latest_trade_signal.json`</li>
-            <li>读取 `hy_ai_command.json`</li>
-            <li>异常时默认 caution 且禁止马丁</li>
-          </ul>
-        </div>
-      </div>
+      <table class="truth-table">
+        <thead>
+          <tr>
+            <th>模块</th>
+            <th>定位</th>
+            <th>是否用大模型</th>
+            <th>是否控制交易</th>
+            <th>主要输出</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>主AI盯盘大脑</b></td>
+            <td>看盘面结构，写中文报告，生成交易观察观点。</td>
+            <td>使用 DeepSeek / OpenAI。</td>
+            <td>不下单，不强制执行。</td>
+            <td>报告、图表、`latest_trade_signal.json`。</td>
+          </tr>
+          <tr>
+            <td><b>哨兵防御大脑</b></td>
+            <td>判断危险环境，给 EA 设置开仓、加仓、马丁权限。</td>
+            <td>不使用，按硬规则评分。</td>
+            <td>控制权限，不直接下单。</td>
+            <td>`hy_ai_command.json`。</td>
+          </tr>
+          <tr>
+            <td><b>学习观察 V1</b></td>
+            <td>读取历史信号和验证结果，沉淀本地经验。</td>
+            <td>V1 不使用大模型训练。</td>
+            <td>不控制，只做影子评分。</td>
+            <td>`ai_learning_shadow.json`、学习状态。</td>
+          </tr>
+          <tr>
+            <td><b>EA执行层</b></td>
+            <td>读取信号和权限，执行账户风控与真实动作。</td>
+            <td>不使用。</td>
+            <td>按权限最终执行。</td>
+            <td>`hy_ea_status.json`、订单动作。</td>
+          </tr>
+        </tbody>
+      </table>
       <div class="note-panel" style="margin-top:16px;">
-        <b>一句话总结：</b>主AI负责“看懂行情”，哨兵负责“危险时踩刹车”，学习观察负责“积累经验”，EA负责“按权限执行”。真实交易权限以 EA 风控和哨兵为准，学习观察永远不能绕过哨兵。
+        <b>一句话总结：</b>主AI给观点，哨兵给权限，学习观察给经验，EA最终执行。学习观察永远只观察，不越过哨兵和账户风控。
       </div>
     </section>
 
     <section id="workflow">
       <div class="section-title">
-        <h2>完整工作链路，从开软件到 EA 执行。</h2>
-          <p>产品不是一个按钮变魔法，而是几条 JSON 链路串起来。下面这条线展示从启动、分析、防御到执行的完整流程。</p>
+        <h2>实际使用顺序：先看报告，再看防御和学习状态。</h2>
+          <p>这一段只讲怎么使用。主程序正常盯盘，哨兵和学习观察从二级入口进入，不挤占原本盯盘界面。</p>
       </div>
       <div class="flow">
-        <div class="step"><span>01</span><br>打开软件，学习观察自动扫描历史样本</div>
-        <div class="step"><span>02</span><br>连接 MT5，读取黄金 M5 / M15 / H1 行情</div>
-        <div class="step"><span>03</span><br>主AI生成中文分析报告和交易信号</div>
-        <div class="step"><span>04</span><br>哨兵读取行情，输出危险等级和权限 JSON</div>
-        <div class="step"><span>05</span><br>EA读取信号和哨兵权限，决定是否允许执行</div>
-        <div class="step"><span>06</span><br>追踪验证结果回流，学习观察继续积累样本</div>
+        <div class="step"><span>01</span><br>打开桌面主程序，先确认 MT5 和基础配置正常</div>
+        <div class="step"><span>02</span><br>点击立即分析或启动盯盘，主AI生成报告和图表</div>
+        <div class="step"><span>03</span><br>进入哨兵模式，配置 MT5 公共 Files 目录并启动</div>
+        <div class="step"><span>04</span><br>查看 danger_score、danger_level 和交易权限</div>
+        <div class="step"><span>05</span><br>进入学习观察，查看样本数量、训练状态和影子评分</div>
+        <div class="step"><span>06</span><br>MT5 EA 同时读取交易信号和哨兵权限，异常默认保守</div>
       </div>
       <div class="grid" style="margin-top:16px;">
-        <div class="card"><b>主系统输出</b><p>`latest_trade_signal.json` 保存最新交易信号，供 EA 读取。主系统也会保存报告、图表、追踪记录。</p></div>
-        <div class="card"><b>哨兵输出</b><p>`hy_ai_command.json` 保存危险等级和权限，告诉 EA 是否允许新开仓、加仓、马丁。</p></div>
-        <div class="card"><b>EA回写</b><p>`hy_ea_status.json` 回写执行层状态，后续可让哨兵和学习观察知道执行环境是否异常。</p></div>
+        <div class="card"><b>看盘面</b><p>重点看三周期图表、AI 中文报告、支撑压力、风险提示和信号评分。</p></div>
+        <div class="card"><b>看防御</b><p>重点看哨兵是否限制新开仓、加仓、马丁，以及异常时是否默认 caution。</p></div>
+        <div class="card"><b>看学习</b><p>重点看样本是否足够、是否完成训练、最新影子评分有没有刷新。</p></div>
       </div>
     </section>
 
     <section id="sentinel">
       <div class="section-title">
         <h2>哨兵模式：不是预测涨跌，是防止危险环境乱动。</h2>
-        <p>哨兵是独立 Python 防御进程，EA 只读取它输出的权限。它不替代主AI，不写成交易策略，也不在 EA 内计算危险评分。</p>
+        <p>这一段只讲防御逻辑。哨兵是独立 Python 进程，EA 只读取它输出的权限；危险评分不放在 EA 内计算。</p>
       </div>
       <div class="explain-grid">
         <div class="explain-card">
@@ -1166,7 +1163,7 @@
     <section id="learning">
       <div class="section-title">
         <h2>学习观察：自动学习历史样本，但不接管交易。</h2>
-        <p>学习观察不是第二个 EA，也不是让大模型直接下单。它的价值是把“历史信号到底有没有用”沉淀成可观察、可复盘、可迭代的本地学习结果。</p>
+        <p>这一段只讲学习机制。学习观察不是第二个 EA，也不是让大模型直接下单；它把历史信号表现沉淀成可观察、可复盘、可迭代的本地学习结果。</p>
       </div>
       <div class="explain-grid">
         <div class="explain-card">
@@ -1214,12 +1211,12 @@
     <section id="risk">
       <div class="section-title">
         <h2>风险写在前面。</h2>
-        <p>交易软件如果只讲机会不讲风险，就不适合交给真实用户。匯鹰黄金 AI 盯盘中枢默认允许“观望”，并明确区分分析辅助与交易决策。</p>
+        <p>交易软件如果只讲机会不讲风险，就不适合实盘环境。匯鹰黄金 AI 盯盘中枢默认允许“观望”，并明确区分分析辅助与交易决策。</p>
       </div>
       <div class="grid">
-        <div class="card risk"><b>不自动下单</b><p>软件只做行情分析和辅助判断，不替用户执行交易。</p></div>
+        <div class="card risk"><b>不自动下单</b><p>软件只做行情分析和辅助判断，不替操作者执行交易。</p></div>
         <div class="card risk"><b>不承诺收益</b><p>任何信号都可能失效，历史表现不代表未来结果。</p></div>
-        <div class="card risk"><b>用户自行决策</b><p>黄金、外汇和差价合约具有高风险，交易结果由用户自行承担。</p></div>
+        <div class="card risk"><b>操作者自行决策</b><p>黄金、外汇和差价合约具有高风险，交易结果由操作者自行承担。</p></div>
       </div>
     </section>
 
