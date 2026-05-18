@@ -934,7 +934,7 @@
     <section id="workmap">
       <div class="section-title">
         <h2>一张导图，看懂谁在工作、谁说了算。</h2>
-        <p>客户只要先看这张图，就能明白：主AI负责分析，哨兵负责防御，学习观察负责积累经验，EA只按权限执行。</p>
+        <p>看这张图，就能明白：主AI负责分析，哨兵负责防御，学习观察负责积累经验，EA只按权限执行。</p>
       </div>
       <div class="work-map">
         <div class="work-map-head">
@@ -1037,14 +1037,14 @@
         <div class="card"><b>学习观察 V1</b><p>影子学习历史信号与验证结果，输出质量评分、成功概率和样本状态，先观察不接管交易。</p></div>
         <div class="card"><b>哨兵模式</b><p>独立 Python 防御进程，输出危险等级和交易权限，EA 异常时默认保守，绝不默认放开马丁。</p></div>
         <div class="card"><b>企业微信推送</b><p>支持企业微信机器人文本或 Markdown 推送，Webhook 默认关闭，避免误发。</p></div>
-        <div class="card"><b>本地授权交付</b><p>离线机器码授权，区分客户版和作者自用版，适合封测和早期销售。</p></div>
+        <div class="card"><b>本地授权交付</b><p>离线机器码授权，区分标准版和作者维护版，适合封测、授权和早期交付。</p></div>
       </div>
     </section>
 
     <section id="architecture">
       <div class="section-title">
         <h2>看懂这套系统，先看四个角色。</h2>
-        <p>主AI负责看盘，哨兵负责防御，学习观察负责积累经验，EA只负责执行权限。客户只要知道谁能控制交易，谁只是分析，就不容易混乱。</p>
+        <p>主AI负责看盘，哨兵负责防御，学习观察负责积累经验，EA只负责执行权限。谁能控制交易、谁只是分析，必须一眼看清。</p>
       </div>
       <div class="map">
         <div class="map-card">
@@ -1096,7 +1096,7 @@
     <section id="workflow">
       <div class="section-title">
         <h2>完整工作链路，从开软件到 EA 执行。</h2>
-        <p>产品不是一个按钮变魔法，而是几条 JSON 链路串起来。下面这条线就是客户每天实际会走的流程。</p>
+          <p>产品不是一个按钮变魔法，而是几条 JSON 链路串起来。下面这条线展示从启动、分析、防御到执行的完整流程。</p>
       </div>
       <div class="flow">
         <div class="step"><span>01</span><br>打开软件，学习观察自动扫描历史样本</div>
@@ -1136,7 +1136,7 @@
             <div><dt>danger_score</dt><dd>0-100 的危险环境分数。</dd></div>
             <div><dt>danger_level</dt><dd>normal、caution、danger、kill 四个等级。</dd></div>
             <div><dt>permissions</dt><dd>是否允许新开仓、加仓、马丁、马丁降档。</dd></div>
-            <div><dt>reason / features</dt><dd>中文原因和关键特征，方便客户知道为什么被限制。</dd></div>
+            <div><dt>reason / features</dt><dd>中文原因和关键特征，清楚说明为什么触发限制。</dd></div>
           </dl>
         </div>
       </div>
@@ -1171,7 +1171,7 @@
       <div class="explain-grid">
         <div class="explain-card">
           <h3>打开软件后它会自动做什么</h3>
-          <p>软件启动后，学习观察会自动扫描本地历史文件，刷新学习状态。样本够就训练本地模型，样本不够就明确告诉客户“样本不足”。</p>
+          <p>软件启动后，学习观察会自动扫描本地历史文件，刷新学习状态。样本够就训练本地模型，样本不够就明确显示“样本不足”。</p>
           <dl>
             <div><dt>读取历史信号</dt><dd>`tracking/signal_history.json`：过去生成过哪些 AI 信号。</dd></div>
             <div><dt>读取验证结果</dt><dd>`tracking/signal_results.json`：这些信号后来被标记为有效、无效或中性。</dd></div>
@@ -1198,7 +1198,7 @@
       <table class="truth-table" style="margin-top:16px;">
         <thead>
           <tr>
-            <th>客户看到的状态</th>
+            <th>界面状态</th>
             <th>真实含义</th>
             <th>下一步该做什么</th>
           </tr>
