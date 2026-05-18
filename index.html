@@ -533,6 +533,148 @@
       color: var(--gold-2);
     }
 
+    .work-map {
+      display: grid;
+      gap: 12px;
+      padding: 18px;
+      border: 1px solid rgba(255, 227, 160, .16);
+      border-radius: 16px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.018)),
+        radial-gradient(circle at 50% 0%, rgba(214,166,63,.13), transparent 32rem);
+    }
+
+    .work-map-head {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: center;
+      padding: 4px 4px 10px;
+    }
+
+    .work-map-head h3 {
+      margin: 0;
+      color: var(--gold-2);
+      font-size: 26px;
+      line-height: 1.2;
+    }
+
+    .work-map-head p {
+      margin: 6px 0 0;
+      color: #c9cecb;
+      font-size: 15px;
+    }
+
+    .control-badge {
+      padding: 8px 12px;
+      border: 1px solid rgba(116,217,159,.28);
+      border-radius: 999px;
+      color: #c9ffdc;
+      background: rgba(116,217,159,.08);
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .diagram-lanes {
+      display: grid;
+      gap: 10px;
+    }
+
+    .diagram-lane {
+      display: grid;
+      grid-template-columns: 1.1fr 1.25fr .95fr 1.15fr;
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .diagram-node {
+      position: relative;
+      min-height: 116px;
+      padding: 14px;
+      border: 1px solid rgba(255,255,255,.09);
+      border-radius: 12px;
+      background: rgba(8, 10, 12, .48);
+    }
+
+    .diagram-node::after {
+      content: "→";
+      position: absolute;
+      right: -16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: rgba(255, 227, 160, .68);
+      font-size: 22px;
+      font-weight: 900;
+      z-index: 2;
+    }
+
+    .diagram-node:last-child::after {
+      content: "";
+    }
+
+    .diagram-node small {
+      display: inline-flex;
+      margin-bottom: 8px;
+      padding: 3px 7px;
+      border-radius: 999px;
+      color: #10100b;
+      background: var(--gold-2);
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .diagram-node b {
+      display: block;
+      margin-bottom: 7px;
+      color: #f7f2e7;
+      font-size: 17px;
+      line-height: 1.25;
+    }
+
+    .diagram-node p {
+      margin: 0;
+      color: #c4c9c8;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .diagram-node.ai {
+      border-color: rgba(105,167,255,.22);
+      background: rgba(105,167,255,.07);
+    }
+
+    .diagram-node.sentinel {
+      border-color: rgba(255,122,122,.26);
+      background: rgba(255,122,122,.075);
+    }
+
+    .diagram-node.learning {
+      border-color: rgba(116,217,159,.26);
+      background: rgba(116,217,159,.07);
+    }
+
+    .diagram-node.ea {
+      border-color: rgba(255,227,160,.26);
+      background: rgba(255,227,160,.07);
+    }
+
+    .diagram-footer {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 2px;
+    }
+
+    .diagram-rule {
+      padding: 12px;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 10px;
+      background: rgba(255,255,255,.035);
+      color: #d8ddd9;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
     .flow {
       display: grid;
       grid-template-columns: repeat(6, 1fr);
@@ -667,8 +809,22 @@
     }
 
     @media (max-width: 920px) {
-      .hero, .grid, .flow, .map, .explain-grid {
+      .hero, .grid, .flow, .map, .explain-grid, .diagram-lane, .diagram-footer, .work-map-head {
         grid-template-columns: 1fr;
+      }
+      .control-badge {
+        justify-self: start;
+        white-space: normal;
+      }
+      .diagram-node::after {
+        content: "↓";
+        right: 50%;
+        top: auto;
+        bottom: -22px;
+        transform: translateX(50%);
+      }
+      .diagram-node:last-child::after {
+        content: "";
       }
       .full-card {
         grid-column: auto;
@@ -718,6 +874,7 @@
         <span>匯鹰黄金 AI 盯盘中枢</span>
       </a>
       <div class="nav-links">
+        <a href="#workmap">导图</a>
         <a href="#features">能力</a>
         <a href="#architecture">架构</a>
         <a href="#workflow">流程</a>
@@ -740,6 +897,7 @@
           匯鹰黄金 AI 盯盘中枢读取 MT5 的 XAUUSD 行情，自动生成 M5 / M15 / H1 图表、EMA结构、信号评分、风险判断和中文分析报告。哨兵模式负责危险环境防御，学习观察负责自动积累历史样本。系统不承诺盈利，核心目标是把盘面、风险和执行边界讲清楚。
         </p>
         <div class="actions">
+          <a class="btn primary" href="#workmap">先看工作导图</a>
           <a class="btn primary" href="#workflow">查看工作流程</a>
           <a class="btn ghost" href="#architecture">看懂系统架构</a>
           <a class="btn ghost" href="#risk">阅读风险提示</a>
@@ -769,6 +927,99 @@
             <div class="metric"><small>波动风险</small><strong>41</strong></div>
             <div class="metric"><small>信号等级</small><strong>B</strong></div>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="workmap">
+      <div class="section-title">
+        <h2>一张导图，看懂谁在工作、谁说了算。</h2>
+        <p>客户只要先看这张图，就能明白：主AI负责分析，哨兵负责防御，学习观察负责积累经验，EA只按权限执行。</p>
+      </div>
+      <div class="work-map">
+        <div class="work-map-head">
+          <div>
+            <h3>匯鹰黄金 AI 盯盘中枢工作导图</h3>
+            <p>三条链路并行：分析链给观点，防御链给权限，学习链给经验。真正能限制交易的是哨兵和 EA 风控。</p>
+          </div>
+          <div class="control-badge">学习观察不接管交易</div>
+        </div>
+
+        <div class="diagram-lanes">
+          <div class="diagram-lane">
+            <div class="diagram-node">
+              <small>行情源</small>
+              <b>MT5 黄金行情</b>
+              <p>读取 XAUUSD 的 M5 / M15 / H1 K线、价格和基础结构。</p>
+            </div>
+            <div class="diagram-node ai">
+              <small>分析链</small>
+              <b>主AI盯盘大脑</b>
+              <p>调用 DeepSeek / OpenAI，生成中文报告、交易观点和信号评分。</p>
+            </div>
+            <div class="diagram-node">
+              <small>信号文件</small>
+              <b>latest_trade_signal.json</b>
+              <p>保存最新交易信号，供 EA 读取，但不绕过风控。</p>
+            </div>
+            <div class="diagram-node ea">
+              <small>执行层</small>
+              <b>EA 按权限执行</b>
+              <p>读取信号后，还要看哨兵权限和账户日亏损风控。</p>
+            </div>
+          </div>
+
+          <div class="diagram-lane">
+            <div class="diagram-node">
+              <small>行情源</small>
+              <b>MT5 黄金行情</b>
+              <p>哨兵同样读取行情，但只看危险环境，不预测涨跌。</p>
+            </div>
+            <div class="diagram-node sentinel">
+              <small>防御链</small>
+              <b>哨兵防御大脑</b>
+              <p>按 ATR、EMA偏离、点差、多周期冲突、假突破计算危险分。</p>
+            </div>
+            <div class="diagram-node">
+              <small>权限文件</small>
+              <b>hy_ai_command.json</b>
+              <p>输出 normal / caution / danger / kill 和开仓、加仓、马丁权限。</p>
+            </div>
+            <div class="diagram-node ea">
+              <small>权限闸门</small>
+              <b>EA 必须服从</b>
+              <p>JSON 缺失、超时或错误时默认 caution，且禁止马丁。</p>
+            </div>
+          </div>
+
+          <div class="diagram-lane">
+            <div class="diagram-node">
+              <small>历史样本</small>
+              <b>信号历史 + 验证结果</b>
+              <p>读取 signal_history 和 signal_results，知道哪些信号有效或无效。</p>
+            </div>
+            <div class="diagram-node learning">
+              <small>学习链</small>
+              <b>学习观察 V1</b>
+              <p>打开软件自动扫描样本；样本够就训练本地模型，样本不足就明确提示。</p>
+            </div>
+            <div class="diagram-node">
+              <small>影子评分</small>
+              <b>ai_learning_shadow.json</b>
+              <p>输出质量评分、成功概率、危险概率和学习状态。</p>
+            </div>
+            <div class="diagram-node learning">
+              <small>观察结论</small>
+              <b>只观察，不接管</b>
+              <p>不控制 EA，不影响哨兵，不决定开仓，只为后续优化积累证据。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="diagram-footer">
+          <div class="diagram-rule">主AI：负责看懂行情和写报告</div>
+          <div class="diagram-rule">哨兵：负责危险时限制权限</div>
+          <div class="diagram-rule">EA：最终按权限和账户风控执行</div>
         </div>
       </div>
     </section>
