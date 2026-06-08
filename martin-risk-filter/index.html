@@ -1,0 +1,1244 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>无限马丁震荡过滤风控策略介绍</title>
+  <meta name="description" content="无限马丁最终版震荡过滤风控 MQ4 策略介绍，基于代码逻辑整理双向网格、马丁阶梯、Damiani 震荡趋势过滤、逃生模式与风险控制参数。">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b0b09;
+      --paper: #f4ead8;
+      --ink: #f7f0e4;
+      --muted: #bdb5a8;
+      --line: rgba(244, 234, 216, .16);
+      --panel: rgba(28, 27, 23, .84);
+      --panel-strong: rgba(39, 37, 31, .92);
+      --gold: #dfb650;
+      --green: #69d39a;
+      --cyan: #7dcbd6;
+      --coral: #ff8d77;
+      --violet: #b7a4ff;
+      --shadow: rgba(0, 0, 0, .36);
+      --radius: 8px;
+    }
+
+    :root[data-theme="light"] {
+      color-scheme: light;
+      --bg: #f4ead8;
+      --paper: #0b0b09;
+      --ink: #17140e;
+      --muted: #615a4d;
+      --line: rgba(30, 26, 18, .18);
+      --panel: rgba(255, 251, 242, .84);
+      --panel-strong: rgba(255, 250, 238, .94);
+      --shadow: rgba(68, 50, 21, .16);
+    }
+
+    * {
+      box-sizing: border-box;
+      letter-spacing: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 86px;
+    }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      color: var(--ink);
+      background:
+        linear-gradient(90deg, rgba(223, 182, 80, .09) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(125, 203, 214, .07) 1px, transparent 1px),
+        linear-gradient(135deg, #0b0b09 0%, #161612 38%, #0c1110 70%, #090909 100%);
+      background-size: 72px 72px, 72px 72px, auto;
+      font-family: "Microsoft YaHei UI", "Noto Sans SC", "Segoe UI", Tahoma, sans-serif;
+      line-height: 1.68;
+    }
+
+    :root[data-theme="light"] body {
+      background:
+        linear-gradient(90deg, rgba(116, 93, 40, .1) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(49, 130, 143, .09) 1px, transparent 1px),
+        linear-gradient(135deg, #f4ead8 0%, #fff9ed 48%, #e8f2ef 100%);
+      background-size: 72px 72px, 72px 72px, auto;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    .shell {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      border-bottom: 1px solid var(--line);
+      background: rgba(10, 10, 8, .86);
+      backdrop-filter: blur(18px);
+    }
+
+    :root[data-theme="light"] .topbar {
+      background: rgba(250, 244, 231, .9);
+    }
+
+    .nav {
+      min-height: 74px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 220px;
+      font-weight: 900;
+      line-height: 1.2;
+    }
+
+    .mark {
+      width: 42px;
+      height: 42px;
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(223, 182, 80, .55);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(135deg, rgba(223, 182, 80, .28), rgba(125, 203, 214, .13)),
+        #15130f;
+      color: var(--gold);
+      box-shadow: 0 14px 34px var(--shadow);
+    }
+
+    .mark svg {
+      width: 25px;
+      height: 25px;
+    }
+
+    .navlinks {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      min-width: 0;
+      max-width: 100%;
+      overflow-x: auto;
+      white-space: nowrap;
+      scrollbar-width: thin;
+    }
+
+    .navlinks a,
+    .toolbtn {
+      min-height: 36px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 11px;
+      border: 1px solid transparent;
+      border-radius: var(--radius);
+      color: var(--muted);
+      background: transparent;
+      cursor: pointer;
+      transition: border-color .2s ease, color .2s ease, background .2s ease;
+    }
+
+    .navlinks a:hover,
+    .toolbtn:hover,
+    .toolbtn[aria-pressed="true"] {
+      color: var(--ink);
+      border-color: var(--line);
+      background: rgba(223, 182, 80, .11);
+    }
+
+    .hero {
+      min-height: calc(100vh - 74px);
+      display: grid;
+      grid-template-columns: .98fr 1.02fr;
+      align-items: center;
+      gap: 34px;
+      padding: 52px 0 58px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      min-height: 34px;
+      padding: 0 12px;
+      border: 1px solid rgba(125, 203, 214, .32);
+      border-radius: var(--radius);
+      color: var(--cyan);
+      background: rgba(125, 203, 214, .08);
+      font-weight: 800;
+      font-size: .88rem;
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin: 0;
+      line-height: 1.14;
+      font-family: Georgia, "Times New Roman", "Noto Serif SC", serif;
+      font-weight: 900;
+    }
+
+    h1 {
+      margin-top: 22px;
+      max-width: 780px;
+      font-size: 4.4rem;
+    }
+
+    .lead {
+      margin: 22px 0 0;
+      max-width: 740px;
+      color: var(--muted);
+      font-size: 1.05rem;
+    }
+
+    .cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .button {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 15px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(244, 234, 216, .05);
+      color: var(--ink);
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .button.primary {
+      border-color: transparent;
+      color: #12100a;
+      background: linear-gradient(135deg, #f5dc8a, var(--gold));
+      box-shadow: 0 18px 46px rgba(223, 182, 80, .22);
+    }
+
+    .visual {
+      position: relative;
+      min-height: 520px;
+      display: grid;
+      align-items: center;
+    }
+
+    .terminal {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel-strong);
+      box-shadow: 0 26px 90px var(--shadow);
+      overflow: hidden;
+    }
+
+    .terminal-head {
+      height: 46px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-size: .84rem;
+    }
+
+    .status-dots {
+      display: flex;
+      gap: 7px;
+    }
+
+    .status-dots span {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--coral);
+    }
+
+    .status-dots span:nth-child(2) {
+      background: var(--gold);
+    }
+
+    .status-dots span:nth-child(3) {
+      background: var(--green);
+    }
+
+    .terminal-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 16px;
+    }
+
+    .metric {
+      min-height: 112px;
+      padding: 15px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, .035);
+    }
+
+    .metric small {
+      display: block;
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    .metric strong {
+      display: block;
+      margin-top: 8px;
+      color: var(--gold);
+      font-size: 1.7rem;
+      line-height: 1.1;
+    }
+
+    .metric.wide {
+      grid-column: 1 / -1;
+      min-height: 230px;
+    }
+
+    canvas {
+      width: 100%;
+      height: 168px;
+      display: block;
+      margin-top: 8px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(0, 0, 0, .18);
+    }
+
+    .section {
+      padding: 66px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .section-title {
+      display: grid;
+      grid-template-columns: .78fr .72fr;
+      gap: 28px;
+      align-items: end;
+      margin-bottom: 24px;
+    }
+
+    .section-title h2 {
+      font-size: 2.55rem;
+    }
+
+    .section-title p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .card {
+      min-height: 188px;
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: 0 18px 52px var(--shadow);
+    }
+
+    .card h3 {
+      margin-bottom: 12px;
+      color: var(--gold);
+      font-size: 1.28rem;
+    }
+
+    .card p,
+    .card li {
+      color: var(--muted);
+      font-size: .96rem;
+    }
+
+    .card p {
+      margin: 0;
+    }
+
+    .card ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    .card li + li {
+      margin-top: 7px;
+    }
+
+    .accent-green h3 {
+      color: var(--green);
+    }
+
+    .accent-cyan h3 {
+      color: var(--cyan);
+    }
+
+    .accent-coral h3 {
+      color: var(--coral);
+    }
+
+    .accent-violet h3 {
+      color: var(--violet);
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+    }
+
+    .step {
+      min-height: 170px;
+      position: relative;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      cursor: pointer;
+      transition: transform .18s ease, border-color .18s ease, background .18s ease;
+    }
+
+    .step:hover,
+    .step.active {
+      transform: translateY(-3px);
+      border-color: rgba(223, 182, 80, .58);
+      background: rgba(223, 182, 80, .1);
+    }
+
+    .step b {
+      display: inline-flex;
+      min-height: 28px;
+      align-items: center;
+      padding: 0 8px;
+      border-radius: var(--radius);
+      color: #11100b;
+      background: var(--gold);
+      font-size: .85rem;
+    }
+
+    .step h3 {
+      margin-top: 13px;
+      font-size: 1.2rem;
+    }
+
+    .step p {
+      margin: 9px 0 0;
+      color: var(--muted);
+      font-size: .9rem;
+    }
+
+    .detail-panel {
+      min-height: 118px;
+      margin-top: 12px;
+      padding: 18px;
+      border: 1px solid rgba(125, 203, 214, .28);
+      border-radius: var(--radius);
+      background: rgba(125, 203, 214, .07);
+      color: var(--muted);
+    }
+
+    .detail-panel strong {
+      color: var(--cyan);
+    }
+
+    .param-toolbar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .search {
+      width: 100%;
+      min-height: 44px;
+      padding: 0 13px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      color: var(--ink);
+      background: var(--panel);
+      outline: none;
+    }
+
+    .filters {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      overflow-x: auto;
+    }
+
+    .chip {
+      min-height: 40px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      color: var(--muted);
+      background: var(--panel);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .chip.active {
+      color: #11100b;
+      border-color: transparent;
+      background: var(--gold);
+      font-weight: 900;
+    }
+
+    .params {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .param {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      min-height: 132px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+    }
+
+    .param h3 {
+      font-family: inherit;
+      font-size: 1rem;
+    }
+
+    .param .key {
+      color: var(--muted);
+      font-size: .8rem;
+      overflow-wrap: anywhere;
+    }
+
+    .param p {
+      grid-column: 1 / -1;
+      margin: 0;
+      color: var(--muted);
+      font-size: .92rem;
+    }
+
+    .tag {
+      min-height: 28px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 8px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      font-size: .78rem;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .tag.on {
+      color: #092516;
+      border-color: transparent;
+      background: var(--green);
+    }
+
+    .tag.off {
+      color: #351007;
+      border-color: transparent;
+      background: var(--coral);
+    }
+
+    .tag.neutral {
+      color: var(--ink);
+      background: rgba(244, 234, 216, .07);
+    }
+
+    .lot-lab {
+      display: grid;
+      grid-template-columns: .72fr 1.28fr;
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .slider-box {
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+    }
+
+    .slider-box label {
+      display: block;
+      color: var(--muted);
+      font-weight: 900;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      margin: 24px 0 12px;
+      accent-color: var(--gold);
+    }
+
+    .lot-result {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .lot-result .metric {
+      min-height: 118px;
+    }
+
+    .bars {
+      min-height: 270px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: 52px 1fr 58px;
+      align-items: center;
+      gap: 8px;
+      margin: 5px 0;
+      color: var(--muted);
+      font-size: .84rem;
+    }
+
+    .bar-track {
+      height: 9px;
+      border-radius: 99px;
+      overflow: hidden;
+      background: rgba(244, 234, 216, .1);
+    }
+
+    .bar-fill {
+      height: 100%;
+      width: 10%;
+      border-radius: 99px;
+      background: linear-gradient(90deg, var(--green), var(--gold), var(--coral));
+    }
+
+    .state-switch {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .state-card {
+      min-height: 158px;
+      padding: 17px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      cursor: pointer;
+    }
+
+    .state-card.active {
+      border-color: rgba(105, 211, 154, .52);
+      background: rgba(105, 211, 154, .09);
+    }
+
+    .state-card h3 {
+      font-size: 1.12rem;
+      color: var(--green);
+    }
+
+    .state-card p {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: .9rem;
+    }
+
+    .risk-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .risk-item {
+      min-height: 158px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+    }
+
+    .risk-item b {
+      display: block;
+      color: var(--coral);
+      margin-bottom: 10px;
+      font-size: 1.02rem;
+    }
+
+    .risk-item p {
+      margin: 0;
+      color: var(--muted);
+      font-size: .92rem;
+    }
+
+    .notice {
+      margin-top: 14px;
+      padding: 18px;
+      border: 1px solid rgba(255, 141, 119, .38);
+      border-radius: var(--radius);
+      color: var(--muted);
+      background: rgba(255, 141, 119, .08);
+    }
+
+    .notice strong {
+      color: var(--coral);
+    }
+
+    .footer {
+      padding: 34px 0 52px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: .9rem;
+    }
+
+    [data-lang="en"] .zh,
+    [data-lang="zh"] .en {
+      display: none;
+    }
+
+    @media (max-width: 980px) {
+      .hero,
+      .section-title,
+      .cards,
+      .flow,
+      .params,
+      .lot-lab,
+      .state-switch,
+      .risk-grid {
+        grid-template-columns: 1fr;
+      }
+
+      h1 {
+        font-size: 3rem;
+      }
+
+      .visual {
+        min-height: 0;
+      }
+
+      .param-toolbar {
+        grid-template-columns: 1fr;
+      }
+
+      .lot-result,
+      .terminal-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .metric.wide {
+        grid-column: auto;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .nav {
+        min-height: 112px;
+        align-items: flex-start;
+        flex-direction: column;
+        padding: 12px 0;
+      }
+
+      .navlinks {
+        width: 100%;
+        justify-content: flex-start;
+      }
+
+      h1 {
+        font-size: 2.42rem;
+      }
+
+      .section-title h2 {
+        font-size: 2rem;
+      }
+    }
+  </style>
+</head>
+<body data-lang="zh">
+  <header class="topbar">
+    <nav class="nav shell" aria-label="page navigation">
+      <a class="brand" href="#top">
+        <span class="mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" fill="none">
+            <path d="M4 22L10 15L15 19L23 8L28 12" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M5 27H28" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <span>
+          <span class="zh">无限马丁震荡过滤风控</span>
+          <span class="en">Infinity Grid Risk Filter</span>
+        </span>
+      </a>
+      <div class="navlinks">
+        <a href="#logic"><span class="zh">逻辑</span><span class="en">Logic</span></a>
+        <a href="#filter"><span class="zh">过滤</span><span class="en">Filter</span></a>
+        <a href="#params"><span class="zh">参数</span><span class="en">Inputs</span></a>
+        <a href="#lot"><span class="zh">手数</span><span class="en">Lots</span></a>
+        <a href="#risk"><span class="zh">风控</span><span class="en">Risk</span></a>
+        <button class="toolbtn" id="langBtn" type="button" aria-pressed="false">EN</button>
+        <button class="toolbtn" id="themeBtn" type="button" aria-pressed="false"><span class="zh">浅色</span><span class="en">Light</span></button>
+      </div>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero shell">
+      <div>
+        <span class="eyebrow">
+          <span class="zh">MT4 EA · XAUUSD 倾向 · 双向独立网格</span>
+          <span class="en">MT4 EA · XAUUSD oriented · dual independent grid</span>
+        </span>
+        <h1>
+          <span class="zh">一个会先判断环境，再决定多空权限的无限网格马丁策略。</span>
+          <span class="en">An infinite grid martingale that reads the market regime before granting buy or sell permission.</span>
+        </h1>
+        <p class="lead">
+          <span class="zh">本介绍严格按照 MQ4 代码逻辑整理。EA 每个 tick 同时运行 BUY 与 SELL 两套独立引擎，默认先用内置 Damiani 风格的震荡趋势过滤判断市场状态：震荡允许双向，趋势只允许顺势方向；随后再通过手数、总仓、保证金、篮子止损与逃生模式进行风险约束。</span>
+          <span class="en">This page is based on the actual MQ4 logic. On every tick the EA runs independent BUY and SELL engines, uses an internal Damiani-style regime filter first, allows both sides in range, allows only trend-following direction in trend, then constrains exposure through lot, basket, margin and escape controls.</span>
+        </p>
+        <div class="cta-row">
+          <a class="button primary" href="#params"><span class="zh">查看已启用参数</span><span class="en">View active inputs</span></a>
+          <a class="button" href="#lot"><span class="zh">试算马丁手数</span><span class="en">Lot ladder</span></a>
+          <a class="button" href="#risk"><span class="zh">阅读风险边界</span><span class="en">Risk boundary</span></a>
+        </div>
+      </div>
+
+      <div class="visual">
+        <div class="terminal" aria-label="strategy dashboard">
+          <div class="terminal-head">
+            <div class="status-dots"><span></span><span></span><span></span></div>
+            <span>XAUUSD INFINITY GRID V2.1</span>
+          </div>
+          <div class="terminal-grid">
+            <div class="metric">
+              <small><span class="zh">默认首单</span><span class="en">Base order</span></small>
+              <strong>0.01 lot</strong>
+            </div>
+            <div class="metric">
+              <small><span class="zh">默认最大层数</span><span class="en">Max layers</span></small>
+              <strong>50 / side</strong>
+            </div>
+            <div class="metric">
+              <small><span class="zh">过滤状态</span><span class="en">Filter status</span></small>
+              <strong><span class="zh">已启用</span><span class="en">Enabled</span></strong>
+            </div>
+            <div class="metric">
+              <small><span class="zh">逃生阈值</span><span class="en">Escape trigger</span></small>
+              <strong>20 <span class="zh">层</span><span class="en">layers</span></strong>
+            </div>
+            <div class="metric wide">
+              <small><span class="zh">可视化：震荡双向，趋势顺势，未知暂停</span><span class="en">Visual: range both sides, trend one side, unknown pause</span></small>
+              <canvas id="regimeCanvas" width="720" height="260"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="logic" class="section">
+      <div class="shell">
+        <div class="section-title">
+          <h2><span class="zh">代码主逻辑</span><span class="en">Core Logic</span></h2>
+          <p><span class="zh">EA 不是单边趋势策略，而是“双引擎并发”的网格马丁。每个方向自己数层、自己找最后开仓价、自己计算均价止盈。</span><span class="en">The EA is not a one-way trend system. It is a dual-engine grid martingale where each side counts layers, tracks its last entry and manages its own weighted-average exit.</span></p>
+        </div>
+
+        <div class="flow" id="flowSteps">
+          <div class="step active" data-detail="tick"><b>01</b><h3><span class="zh">OnTick 启动</span><span class="en">OnTick</span></h3><p><span class="zh">先检查有效期，再检查风控触发状态。</span><span class="en">Checks expiry first, then risk-stop status.</span></p></div>
+          <div class="step" data-detail="engines"><b>02</b><h3><span class="zh">双引擎并发</span><span class="en">Dual engines</span></h3><p><span class="zh">BUY 与 SELL 都执行 ProcessEngine。</span><span class="en">BUY and SELL both run ProcessEngine.</span></p></div>
+          <div class="step" data-detail="entry"><b>03</b><h3><span class="zh">首单即时入场</span><span class="en">Instant first order</span></h3><p><span class="zh">某方向无单时，只要过滤允许就开首单。</span><span class="en">If a side has no order, it opens when allowed.</span></p></div>
+          <div class="step" data-detail="grid"><b>04</b><h3><span class="zh">逆向网格补仓</span><span class="en">Adverse grid</span></h3><p><span class="zh">价格远离最后一单达到 250 点时补仓。</span><span class="en">Adds when price moves 250 points against last entry.</span></p></div>
+          <div class="step" data-detail="exit"><b>05</b><h3><span class="zh">均价止盈退出</span><span class="en">Average exit</span></h3><p><span class="zh">2 单起按加权均价批量修改 TP/SL。</span><span class="en">From two orders, modifies TP/SL by weighted average.</span></p></div>
+        </div>
+        <div class="detail-panel" id="flowDetail"></div>
+      </div>
+    </section>
+
+    <section id="filter" class="section">
+      <div class="shell">
+        <div class="section-title">
+          <h2><span class="zh">震荡趋势过滤</span><span class="en">Regime Filter</span></h2>
+          <p><span class="zh">默认启用。代码内置计算，不依赖外部指标文件。它先判断震荡还是趋势，再用 EMA50 的位置与斜率判定顺势方向。</span><span class="en">Enabled by default. The calculation is built into the EA and does not require an external indicator file. It first classifies range versus trend, then uses EMA50 position and slope to identify direction.</span></p>
+        </div>
+
+        <div class="state-switch" id="stateCards">
+          <div class="state-card active" data-state="range"><h3><span class="zh">震荡</span><span class="en">Range</span></h3><p><span class="zh">多单和空单都允许开仓与马丁补仓。</span><span class="en">BUY and SELL entries and grid additions are both allowed.</span></p></div>
+          <div class="state-card" data-state="up"><h3><span class="zh">上升趋势</span><span class="en">Uptrend</span></h3><p><span class="zh">只允许 BUY 与 BUY 马丁，SELL 被过滤。</span><span class="en">Only BUY and BUY martingale are allowed. SELL is blocked.</span></p></div>
+          <div class="state-card" data-state="down"><h3><span class="zh">下降趋势</span><span class="en">Downtrend</span></h3><p><span class="zh">只允许 SELL 与 SELL 马丁，BUY 被过滤。</span><span class="en">Only SELL and SELL martingale are allowed. BUY is blocked.</span></p></div>
+          <div class="state-card" data-state="unknown"><h3><span class="zh">信号不明</span><span class="en">Unknown</span></h3><p><span class="zh">默认不允许新开单和补仓，除非手动打开“信号不明允许开单”。</span><span class="en">New entries and additions are blocked unless the unknown-signal override is enabled.</span></p></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="params" class="section">
+      <div class="shell">
+        <div class="section-title">
+          <h2><span class="zh">参数全景</span><span class="en">Input Map</span></h2>
+          <p><span class="zh">默认已经开启或实际生效的参数放在主说明里。默认关闭、为 0 或需要额外打开才生效的参数也保留在次要说明中。</span><span class="en">Inputs active by default are emphasized. Disabled, zeroed, or conditional inputs are kept in the secondary view.</span></p>
+        </div>
+        <div class="param-toolbar">
+          <input class="search" id="paramSearch" placeholder="搜索参数 / Search input">
+          <div class="filters" id="paramFilters">
+            <button class="chip active" data-filter="all" type="button"><span class="zh">全部</span><span class="en">All</span></button>
+            <button class="chip" data-filter="on" type="button"><span class="zh">已启动</span><span class="en">Active</span></button>
+            <button class="chip" data-filter="off" type="button"><span class="zh">未打开</span><span class="en">Inactive</span></button>
+            <button class="chip" data-filter="risk" type="button"><span class="zh">风控</span><span class="en">Risk</span></button>
+          </div>
+        </div>
+        <div class="params" id="paramList"></div>
+      </div>
+    </section>
+
+    <section id="lot" class="section">
+      <div class="shell">
+        <div class="section-title">
+          <h2><span class="zh">马丁手数阶梯</span><span class="en">Martingale Ladder</span></h2>
+          <p><span class="zh">首单使用 InpBaseLot。补仓手数由代码内固定阶梯决定，不完全跟随起始手数。默认 50 层以内，单边理论总手数约 13.07 手。</span><span class="en">The first order uses InpBaseLot. Add-on lots are defined by a hard-coded ladder and do not fully scale with the base lot. Within 50 layers, default theoretical side exposure is about 13.07 lots.</span></p>
+        </div>
+        <div class="lot-lab">
+          <div class="slider-box">
+            <label for="layerRange"><span class="zh">当前方向已有层数</span><span class="en">Existing layers on this side</span></label>
+            <input id="layerRange" type="range" min="0" max="49" value="20">
+            <div class="lot-result">
+              <div class="metric"><small><span class="zh">下一单手数</span><span class="en">Next lot</span></small><strong id="nextLot">0.12</strong></div>
+              <div class="metric"><small><span class="zh">是否逃生</span><span class="en">Escape mode</span></small><strong id="escapeState">ON</strong></div>
+              <div class="metric"><small><span class="zh">目标止盈</span><span class="en">Target TP</span></small><strong id="targetTp">10</strong></div>
+            </div>
+            <p class="lead" style="font-size:.94rem"><span class="zh">当某方向持仓层数大于等于 20，均价止盈从 120 点切换为 10 点，策略目标从盈利扩展转为快速脱身。</span><span class="en">When one side reaches 20 layers, basket TP switches from 120 points to 10 points, turning the goal from profit expansion to fast escape.</span></p>
+          </div>
+          <div class="bars" id="lotBars" aria-label="lot ladder chart"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="risk" class="section">
+      <div class="shell">
+        <div class="section-title">
+          <h2><span class="zh">风险控制与国际化注意</span><span class="en">Risk Controls and Global Notes</span></h2>
+          <p><span class="zh">这类策略的核心风险来自连续单边行情、点值差异、杠杆与滑点。代码有多层限制，但默认关闭了账户净值止损和浮亏金额止损，实盘前必须按账户资金重新设置。</span><span class="en">The main risks are persistent one-way markets, broker point-value differences, leverage and slippage. The code has several limits, but equity stop and floating-loss stop are disabled by default and should be calibrated before live use.</span></p>
+        </div>
+
+        <div class="risk-grid">
+          <div class="risk-item"><b><span class="zh">点值依赖经纪商</span><span class="en">Broker point value</span></b><p><span class="zh">网格、止盈、止损都使用 MT4 的 Point。不同黄金报价位数下，250 点对应的美元距离可能不同。</span><span class="en">Grid, TP and SL use MT4 Point. For XAUUSD, the cash distance represented by 250 points varies by broker digits.</span></p></div>
+          <div class="risk-item"><b><span class="zh">浮亏止损默认关闭</span><span class="en">Floating stop off</span></b><p><span class="zh">InpEnableFloatingLossStop=false，InpMaxFloatingLoss=0。默认不会按 EA 浮亏金额触发停机。</span><span class="en">InpEnableFloatingLossStop=false and InpMaxFloatingLoss=0, so default settings do not stop by EA floating loss.</span></p></div>
+          <div class="risk-item"><b><span class="zh">净值止损默认关闭</span><span class="en">Equity stop off</span></b><p><span class="zh">InpEnableEquityStop=false，InpMinEquity=0。账户级净值保护需要手动打开并设置金额。</span><span class="en">InpEnableEquityStop=false and InpMinEquity=0. Account equity protection must be enabled and funded manually.</span></p></div>
+          <div class="risk-item"><b><span class="zh">有效期保护</span><span class="en">Expiry guard</span></b><p><span class="zh">代码内置 2027-04-20 00:00 有效期检查，超过后 EA 会提示升级并移除。</span><span class="en">The code includes an expiry check for 2027-04-20 00:00. After that time it alerts for upgrade and removes the EA.</span></p></div>
+        </div>
+
+        <div class="notice">
+          <strong><span class="zh">免责声明：</span><span class="en">Disclaimer: </span></strong>
+          <span class="zh">本页面仅为策略逻辑介绍，不构成投资建议或盈利承诺。网格马丁在强趋势、流动性不足、重大新闻、点差扩大、断网或平台拒单时可能快速放大风险。任何实盘部署都应先完成模拟测试、压力回测、最大浮亏评估和资金承受能力确认。</span>
+          <span class="en">This page is a strategy explanation only. It is not investment advice and does not guarantee profitability. Grid martingale risk can expand quickly during strong trends, low liquidity, news spikes, wider spreads, disconnections or order rejections. Live deployment should follow demo testing, stress backtesting, drawdown estimation and capital suitability checks.</span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="shell">
+      <span class="zh">基于文件：无限马丁_最终版_震荡过滤风控.mq4。策略注释：交易有风险，投资者盈亏自负。</span>
+      <span class="en">Based on file: 无限马丁_最终版_震荡过滤风控.mq4. Trading involves risk and users are responsible for their own profit and loss.</span>
+    </div>
+  </footer>
+
+  <script>
+    const i18n = {
+      flow: {
+        tick: {
+          zh: "OnTick 内部先执行有效期检查。当前代码的账户白名单数组被注释，runok 被直接设为 1；但时间检查仍然生效，超过 2027-04-20 00:00 会 Alert 并 ExpertRemove。随后调用 RiskStopTriggeredNow。",
+          en: "OnTick checks expiry first. In the current code the account whitelist array is commented and runok is set to 1, while the time check remains active. After 2027-04-20 00:00 it alerts and removes the EA. RiskStopTriggeredNow is then called."
+        },
+        engines: {
+          zh: "EA 每 tick 分别执行 ProcessEngine(OP_BUY) 与 ProcessEngine(OP_SELL)。两个方向互不合并，分别统计订单数量、最后开仓价和加权均价。",
+          en: "Every tick, the EA runs ProcessEngine(OP_BUY) and ProcessEngine(OP_SELL). The two sides are managed separately, each with its own order count, last entry price and weighted average."
+        },
+        entry: {
+          zh: "某方向 count==0 时，如果 DMI_AllowOrder(type) 允许，就用 InpBaseLot 立即开首单。首单自带 InpTakeProfit=160 点的 TP；InpFirstStopLoss=0，所以默认首单不设置 SL。",
+          en: "When count==0 for one side, it opens immediately with InpBaseLot if DMI_AllowOrder(type) permits. The first order receives TP=160 points. InpFirstStopLoss=0, so no first-order SL is set by default."
+        },
+        grid: {
+          zh: "当 count < InpMaxLayers 且价格相对最后一单逆向移动 InpGridStep=250 点时触发补仓。BUY 是 Ask <= lastPrice - step，SELL 是 Bid >= lastPrice + step。补仓仍需通过过滤和风控。",
+          en: "When count < InpMaxLayers and price moves 250 points against the last entry, an add-on is triggered. BUY uses Ask <= lastPrice - step, SELL uses Bid >= lastPrice + step. Add-ons still pass the filter and risk checks."
+        },
+        exit: {
+          zh: "count<2 时只依靠首单 TP。count>=2 后，ManageExit 计算同方向加权均价，批量修改该方向所有订单的 TP；达到逃生层数后，均价 TP 从 120 点缩短到 10 点。InpBasketStopLoss=50000 时，还会为篮子订单设置很宽的均价止损。",
+          en: "With count<2, the first order TP is used. From count>=2, ManageExit calculates same-side weighted average and modifies all same-side orders. At the escape layer, basket TP is shortened from 120 points to 10 points. With InpBasketStopLoss=50000, it also sets a wide basket SL."
+        }
+      }
+    };
+
+    const params = [
+      {group:"资金管理", key:"InpBaseLot", value:"0.01", status:"on", tags:["money"], zh:"首单起始手数。某方向没有订单时，过滤允许就用该手数立即开首单。注意：后续补仓手数由代码固定阶梯计算，不完全跟随起始手数。", en:"Base lot for the first order. If one side has no order and the filter allows it, the EA opens immediately with this lot. Add-on lots are controlled by a fixed code ladder."},
+      {group:"资金管理", key:"InpMagicNumber", value:"99999", status:"on", tags:["money"], zh:"魔术码。EA 只统计和管理当前品种、当前魔术码下的 BUY/SELL 订单。", en:"Magic number. The EA only counts and manages orders on the current symbol with this magic number."},
+      {group:"资金管理", key:"InpComment", value:"汇交易策略研发中心", status:"on", tags:["money"], zh:"订单注释，随 OrderSend 写入订单，便于识别来源。", en:"Order comment passed to OrderSend for source identification."},
+      {group:"网格核心", key:"InpGridStep", value:"250", status:"on", tags:["grid"], zh:"加仓间距。BUY 价格下跌到最后买单价下方 250 Point 补多；SELL 价格上涨到最后空单价上方 250 Point 补空。", en:"Grid step. BUY adds 250 Points below the last BUY entry. SELL adds 250 Points above the last SELL entry."},
+      {group:"网格核心", key:"InpTakeProfit", value:"160", status:"on", tags:["grid"], zh:"首单止盈点数。只有单张订单时，依靠开仓时设置的 160 点 TP。", en:"First-order take-profit in points. A single order relies on the 160-point TP set at entry."},
+      {group:"网格核心", key:"InpBasketTP", value:"120", status:"on", tags:["grid"], zh:"普通篮子均价止盈。某方向持仓达到 2 单后，按加权均价上下 120 点批量设置 TP。", en:"Normal basket TP. From two orders on a side, TP is set 120 points from weighted average."},
+      {group:"网格核心", key:"InpMaxLayers", value:"50", status:"on", tags:["grid","risk"], zh:"最大层数限制。某方向 count < 50 才允许继续补仓，达到 50 层后停止新增该方向网格。", en:"Maximum layers per side. Add-ons are allowed only while count < 50."},
+      {group:"逃生模式", key:"InpEscapeLayer", value:"20", status:"on", tags:["risk","grid"], zh:"逃生模式触发层数。某方向持仓层数大于等于 20 时，篮子止盈切换为逃生止盈。", en:"Escape trigger. When one side reaches 20 layers, basket TP switches to escape TP."},
+      {group:"逃生模式", key:"InpEscapeTP", value:"10", status:"on", tags:["risk","grid"], zh:"逃生止盈点数。达到逃生层数后，只要均价方向回撤 10 点就尝试离场，目标是降低暴露时间。", en:"Escape TP in points. After the escape trigger, the EA aims to exit after a 10-point recovery from average."},
+      {group:"震荡趋势过滤", key:"启用震荡趋势过滤", value:"true", status:"on", tags:["filter"], zh:"默认开启，是本版本核心改动。所有首单和补仓都会二次检查 DMI_AllowOrder。", en:"Enabled by default and central to this version. All entries and additions are checked through DMI_AllowOrder."},
+      {group:"震荡趋势过滤", key:"过滤计算周期", value:"PERIOD_CURRENT", status:"on", tags:["filter"], zh:"使用当前图表周期计算过滤状态，便于和挂载周期保持一致。", en:"Uses the current chart timeframe for regime calculation."},
+      {group:"震荡趋势过滤", key:"短周期波动参数", value:"7", status:"on", tags:["filter"], zh:"短周期 ATR 与标准差计算参数，用于构造波动比率。", en:"Short-period ATR and standard-deviation setting used in volatility ratio."},
+      {group:"震荡趋势过滤", key:"长周期波动参数", value:"50", status:"on", tags:["filter"], zh:"长周期 ATR 与标准差计算参数，作为短周期波动的参照基准。", en:"Long-period ATR and standard-deviation setting used as the reference baseline."},
+      {group:"震荡趋势过滤", key:"趋势判断阈值", value:"1.1", status:"on", tags:["filter"], zh:"趋势判断门槛。代码用 vol > threshold 判断趋势，threshold 由 1.1 减去短长标准差比修正。", en:"Trend threshold. The code treats vol > threshold as trend, where threshold is 1.1 minus the short/long standard-deviation ratio."},
+      {group:"震荡趋势过滤", key:"启用滞后修正", value:"true", status:"on", tags:["filter"], zh:"默认开启。通过历史 indC 差值修正 vol，降低过滤信号滞后。", en:"Enabled by default. It adjusts vol using historical indC differences to reduce signal lag."},
+      {group:"震荡趋势过滤", key:"滞后修正强度", value:"0.5", status:"on", tags:["filter"], zh:"滞后修正权重。数值越高，对短期变化更敏感。", en:"Lag-correction strength. Higher values make the filter more responsive."},
+      {group:"震荡趋势过滤", key:"最大参考蜡烛数量", value:"1000", status:"on", tags:["filter"], zh:"最多参考历史蜡烛数量，用于控制加载计算量。", en:"Maximum historical candles referenced to control calculation load."},
+      {group:"震荡趋势过滤", key:"连续确认蜡烛数量", value:"2", status:"on", tags:["filter"], zh:"只使用已收盘 K 线，连续 2 根都趋势或都震荡才确认，避免当前 K 线跳变。", en:"Uses closed candles only. Two consecutive candles must agree before confirming range or trend."},
+      {group:"震荡趋势过滤", key:"反转过滤信号", value:"false", status:"off", tags:["filter"], zh:"默认关闭。打开后会反转趋势/震荡判断，属于特殊校准或反向测试参数。", en:"Disabled by default. When enabled, it reverses the range/trend judgment and is mainly for special calibration or reverse testing."},
+      {group:"震荡趋势过滤", key:"信号不明允许开单", value:"false", status:"off", tags:["filter"], zh:"默认关闭。过滤状态未知时，EA 暂停新开单和补仓。打开后未知状态也允许交易，风险更高。", en:"Disabled by default. When the filter is unknown, entries and additions are paused. Enabling it allows trading in uncertain conditions."},
+      {group:"震荡趋势过滤", key:"顺势均线周期", value:"50", status:"on", tags:["filter"], zh:"趋势方向确认 EMA 周期。价格在 EMA50 上方且 EMA 向上为上升趋势，反之为下降趋势。", en:"EMA period for trend direction. Price above rising EMA50 means uptrend, below falling EMA50 means downtrend."},
+      {group:"震荡趋势过滤", key:"斜率确认蜡烛数量", value:"3", status:"on", tags:["filter"], zh:"用当前已收盘 EMA 与 3 根前 EMA 比较斜率方向。", en:"Compares the last closed EMA with the EMA three candles ago to determine slope."},
+      {group:"震荡趋势过滤", key:"最小斜率点数", value:"0", status:"off", tags:["filter"], zh:"默认没有额外斜率门槛，只要求 EMA 方向成立。需要更严格趋势确认时可提高。", en:"No extra slope threshold by default. Increase it for stricter trend confirmation."},
+      {group:"风险控制", key:"InpMaxSingleLot", value:"1.0", status:"on", tags:["risk"], zh:"单笔最大手数限制。NormalizeTradeLot 会把超过 1.0 的下单手数压回上限。", en:"Maximum single-order lot. NormalizeTradeLot caps orders above 1.0 lot."},
+      {group:"风险控制", key:"InpMaxBuyLots", value:"20.0", status:"on", tags:["risk"], zh:"多单总手数上限。下一个 BUY 会导致多单总手数超过 20 时禁止开仓。", en:"Total BUY exposure cap. A new BUY is blocked if it would exceed 20 lots."},
+      {group:"风险控制", key:"InpMaxSellLots", value:"20.0", status:"on", tags:["risk"], zh:"空单总手数上限。下一个 SELL 会导致空单总手数超过 20 时禁止开仓。", en:"Total SELL exposure cap. A new SELL is blocked if it would exceed 20 lots."},
+      {group:"风险控制", key:"InpMaxTotalLots", value:"50.0", status:"on", tags:["risk"], zh:"多空总手数上限。BUY+SELL 总手数超过 50 前会被 RiskAllowNewOrder 拦截。", en:"Combined exposure cap. BUY+SELL total lots are blocked before exceeding 50."},
+      {group:"风险控制", key:"InpFirstStopLoss", value:"0", status:"off", tags:["risk"], zh:"默认不设置首单止损。只有设为大于 0 时，首单 OrderSend 才会带 SL。", en:"No first-order SL by default. Only values above 0 add SL to the first order."},
+      {group:"风险控制", key:"InpBasketStopLoss", value:"50000", status:"on", tags:["risk"], zh:"篮子均价止损默认开启但非常宽。仅 count>=2 调用 ManageExit 时，根据均价为该方向订单设置止损。", en:"Basket SL is enabled but very wide. It is applied from count>=2 in ManageExit based on weighted average."},
+      {group:"风险控制", key:"InpEnableEquityStop", value:"false", status:"off", tags:["risk"], zh:"账户净值止损默认关闭。若打开且 AccountEquity <= InpMinEquity，会触发风控。", en:"Account equity stop is disabled by default. If enabled and AccountEquity <= InpMinEquity, it triggers risk stop."},
+      {group:"风险控制", key:"InpMinEquity", value:"0.0", status:"off", tags:["risk"], zh:"净值止损金额。默认 0，不会触发。必须配合 InpEnableEquityStop=true。", en:"Equity stop level. Default 0 does not trigger and requires InpEnableEquityStop=true."},
+      {group:"风险控制", key:"InpEnableFloatingLossStop", value:"false", status:"off", tags:["risk"], zh:"本 EA 浮亏金额止损默认关闭。打开后才会按 GetFloatingProfit 的负值触发。", en:"EA floating-loss stop is disabled by default. Enable it to stop by GetFloatingProfit drawdown."},
+      {group:"风险控制", key:"InpMaxFloatingLoss", value:"0.0", status:"off", tags:["risk"], zh:"最大浮亏金额。默认 0，不会触发。必须配合 InpEnableFloatingLossStop=true。", en:"Maximum floating loss. Default 0 does not trigger and requires InpEnableFloatingLossStop=true."},
+      {group:"风险控制", key:"InpCloseAllOnRiskStop", value:"false", status:"off", tags:["risk"], zh:"风控触发后默认不强制平掉本 EA 全部订单，只阻止新开单。打开后会执行 CloseAllEAOrders。", en:"By default a risk stop does not close all EA orders; it blocks new orders. Enable it to run CloseAllEAOrders."},
+      {group:"风险控制", key:"InpRiskStopLock", value:"true", status:"on", tags:["risk"], zh:"风控触发后锁定开仓，重启 EA 才解除。注意：默认净值/浮亏止损未开，因此需要先启用触发源。", en:"After a risk stop, new orders remain locked until EA restart. Note that equity and floating-loss stop sources are disabled by default."},
+      {group:"风险控制", key:"InpCheckFreeMargin", value:"true", status:"on", tags:["risk"], zh:"下单前检查 AccountFreeMarginCheck，保证下单后剩余保证金大于设置阈值。", en:"Checks AccountFreeMarginCheck before sending an order."},
+      {group:"风险控制", key:"InpMinFreeMarginAfterOrder", value:"0.0", status:"on", tags:["risk"], zh:"默认最低剩余保证金阈值为 0。配合保证金检查时，至少要求下单后剩余保证金为正。", en:"Minimum free margin after order is 0 by default. With margin check enabled, free margin must remain positive."}
+    ];
+
+    const body = document.body;
+    const langBtn = document.getElementById("langBtn");
+    const themeBtn = document.getElementById("themeBtn");
+    const flowDetail = document.getElementById("flowDetail");
+    const paramList = document.getElementById("paramList");
+    const paramSearch = document.getElementById("paramSearch");
+    const layerRange = document.getElementById("layerRange");
+    const nextLot = document.getElementById("nextLot");
+    const escapeState = document.getElementById("escapeState");
+    const targetTp = document.getElementById("targetTp");
+    const lotBars = document.getElementById("lotBars");
+    let currentFilter = "all";
+    let currentLang = "zh";
+    let currentState = "range";
+
+    function setFlowDetail(key) {
+      flowDetail.innerHTML = "<strong>" + (currentLang === "zh" ? "代码解释：" : "Code note:") + "</strong> " + i18n.flow[key][currentLang];
+    }
+
+    document.querySelectorAll(".step").forEach((step) => {
+      step.addEventListener("click", () => {
+        document.querySelectorAll(".step").forEach((item) => item.classList.remove("active"));
+        step.classList.add("active");
+        setFlowDetail(step.dataset.detail);
+      });
+    });
+
+    document.querySelectorAll(".state-card").forEach((card) => {
+      card.addEventListener("click", () => {
+        document.querySelectorAll(".state-card").forEach((item) => item.classList.remove("active"));
+        card.classList.add("active");
+        currentState = card.dataset.state;
+        drawRegime();
+      });
+    });
+
+    document.querySelectorAll(".chip").forEach((chip) => {
+      chip.addEventListener("click", () => {
+        document.querySelectorAll(".chip").forEach((item) => item.classList.remove("active"));
+        chip.classList.add("active");
+        currentFilter = chip.dataset.filter;
+        renderParams();
+      });
+    });
+
+    paramSearch.addEventListener("input", renderParams);
+
+    function renderParams() {
+      const term = paramSearch.value.trim().toLowerCase();
+      const visible = params.filter((item) => {
+        const statusMatch = currentFilter === "all" || item.status === currentFilter || item.tags.includes(currentFilter);
+        const text = [item.group, item.key, item.value, item.zh, item.en].join(" ").toLowerCase();
+        return statusMatch && (!term || text.includes(term));
+      });
+
+      paramList.innerHTML = visible.map((item) => {
+        const statusText = item.status === "on"
+          ? (currentLang === "zh" ? "已启动" : "Active")
+          : (currentLang === "zh" ? "未打开" : "Inactive");
+        return `
+          <article class="param">
+            <div>
+              <h3>${item.key}</h3>
+              <div class="key">${item.group} · ${item.value}</div>
+            </div>
+            <span class="tag ${item.status}">${statusText}</span>
+            <p>${currentLang === "zh" ? item.zh : item.en}</p>
+          </article>
+        `;
+      }).join("");
+    }
+
+    function lotForLayer(layer) {
+      if (layer < 7) return 0.01;
+      if (layer < 11) return 0.02;
+      if (layer < 13) return 0.05;
+      if (layer < 15) return 0.06;
+      if (layer < 17) return 0.07;
+      if (layer < 19) return 0.08;
+      return 0.10 + (layer - 19) * 0.02;
+    }
+
+    function sumLots(count) {
+      let total = 0;
+      for (let layer = 0; layer < count; layer += 1) {
+        total += layer === 0 ? 0.01 : lotForLayer(layer);
+      }
+      return total;
+    }
+
+    function renderLot() {
+      const layer = Number(layerRange.value);
+      const lot = layer === 0 ? 0.01 : lotForLayer(layer);
+      const escape = layer >= 20;
+      nextLot.textContent = lot.toFixed(2);
+      escapeState.textContent = escape ? "ON" : "OFF";
+      targetTp.textContent = escape ? "10" : "120";
+
+      const bars = [];
+      for (let item = 0; item <= 49; item += 1) {
+        const itemLot = item === 0 ? 0.01 : lotForLayer(item);
+        const width = Math.max(5, Math.min(100, itemLot / 0.70 * 100));
+        if (item < 8 || item % 3 === 0 || item === layer || item > 45) {
+          bars.push(`<div class="bar-row">
+            <span>L${String(item + 1).padStart(2, "0")}</span>
+            <div class="bar-track"><div class="bar-fill" style="width:${width}%"></div></div>
+            <span>${itemLot.toFixed(2)}</span>
+          </div>`);
+        }
+      }
+      bars.unshift(`<div class="bar-row"><span>${currentLang === "zh" ? "合计" : "Sum"}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.min(100, sumLots(layer + 1) / 13.07 * 100)}%"></div></div><span>${sumLots(layer + 1).toFixed(2)}</span></div>`);
+      lotBars.innerHTML = bars.join("");
+    }
+
+    layerRange.addEventListener("input", renderLot);
+
+    function drawRegime() {
+      const canvas = document.getElementById("regimeCanvas");
+      const ctx = canvas.getContext("2d");
+      const width = canvas.width;
+      const height = canvas.height;
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue("--panel");
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.strokeStyle = "rgba(244,234,216,.16)";
+      ctx.lineWidth = 1;
+      for (let x = 0; x < width; x += 60) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, height);
+        ctx.stroke();
+      }
+      for (let y = 30; y < height; y += 42) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+        ctx.stroke();
+      }
+
+      const colorMap = {
+        range: "#dfb650",
+        up: "#69d39a",
+        down: "#ff8d77",
+        unknown: "#b7a4ff"
+      };
+      const textMap = {
+        range: currentLang === "zh" ? "震荡：BUY 与 SELL 都允许" : "Range: BUY and SELL allowed",
+        up: currentLang === "zh" ? "上升：只允许 BUY" : "Uptrend: BUY only",
+        down: currentLang === "zh" ? "下降：只允许 SELL" : "Downtrend: SELL only",
+        unknown: currentLang === "zh" ? "不明：默认暂停新开单/补仓" : "Unknown: pause entries/additions"
+      };
+      ctx.strokeStyle = colorMap[currentState];
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      for (let x = 0; x < width; x += 8) {
+        let y = height * .55 + Math.sin(x / 34) * 24 + Math.cos(x / 19) * 10;
+        if (currentState === "up") y = height * .72 - x * .16 + Math.sin(x / 30) * 14;
+        if (currentState === "down") y = height * .28 + x * .16 + Math.sin(x / 30) * 14;
+        if (currentState === "unknown") y = height * .5 + Math.sin(x / 18) * 42;
+        if (x === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+
+      ctx.fillStyle = colorMap[currentState];
+      ctx.font = "bold 22px Segoe UI, sans-serif";
+      ctx.fillText(textMap[currentState], 22, 38);
+      ctx.fillStyle = "rgba(244,234,216,.74)";
+      ctx.font = "15px Segoe UI, sans-serif";
+      ctx.fillText(currentLang === "zh" ? "逻辑源自 DMI_GetMarketState 与 DMI_AllowOrder" : "Driven by DMI_GetMarketState and DMI_AllowOrder", 22, 64);
+    }
+
+    function refreshLanguage() {
+      body.dataset.lang = currentLang;
+      langBtn.textContent = currentLang === "zh" ? "EN" : "中文";
+      langBtn.setAttribute("aria-pressed", currentLang === "en" ? "true" : "false");
+      const active = document.querySelector(".step.active");
+      setFlowDetail(active ? active.dataset.detail : "tick");
+      renderParams();
+      renderLot();
+      drawRegime();
+    }
+
+    langBtn.addEventListener("click", () => {
+      currentLang = currentLang === "zh" ? "en" : "zh";
+      document.documentElement.lang = currentLang === "zh" ? "zh-CN" : "en";
+      refreshLanguage();
+    });
+
+    themeBtn.addEventListener("click", () => {
+      const root = document.documentElement;
+      const light = root.dataset.theme !== "light";
+      root.dataset.theme = light ? "light" : "dark";
+      themeBtn.setAttribute("aria-pressed", light ? "true" : "false");
+      drawRegime();
+    });
+
+    setFlowDetail("tick");
+    renderParams();
+    renderLot();
+    drawRegime();
+  </script>
+</body>
+</html>
