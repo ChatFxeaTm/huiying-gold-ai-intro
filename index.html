@@ -26,9 +26,51 @@
         return response.text();
       })
       .then(function(html) {
-        html = html
-          .replace('基于文件：无限马丁_最终版_震荡过滤风控.mq4。策略注释：交易有风险，投资者盈亏自负。', '汇交易策略研发中心出品')
-          .replace('Based on file: 无限马丁_最终版_震荡过滤风控.mq4. Trading involves risk and users are responsible for their own profit and loss.', 'Produced by Hui Trading Strategy R&D Center');
+        var replacements = [
+          ['基于文件：无限马丁_最终版_震荡过滤风控.mq4。策略注释：交易有风险，投资者盈亏自负。', '汇交易策略研发中心出品'],
+          ['Based on file: 无限马丁_最终版_震荡过滤风控.mq4. Trading involves risk and users are responsible for their own profit and loss.', 'Produced by Hui Trading Strategy R&D Center'],
+          ['本介绍严格按照 MQ4 代码逻辑整理。EA 每个 tick 同时运行 BUY 与 SELL 两套独立引擎，默认先用内置 Damiani 风格的震荡趋势过滤判断市场状态：震荡允许双向，趋势只允许顺势方向；随后再通过手数、总仓、保证金、篮子止损与逃生模式进行风险约束。', '本策略采用 BUY 与 SELL 两套独立网格引擎，先通过震荡趋势过滤判断市场环境：震荡允许双向，趋势只允许顺势方向；随后再通过手数、总仓、保证金、篮子止损与逃生模式进行风险约束。'],
+          ['This page is based on the actual MQ4 logic. On every tick the EA runs independent BUY and SELL engines, uses an internal Damiani-style regime filter first, allows both sides in range, allows only trend-following direction in trend, then constrains exposure through lot, basket, margin and escape controls.', 'This strategy uses independent buy and sell grid engines. It first reads the market regime: range allows both sides, trend allows only the trend-following direction, then exposure is constrained by lot, basket, margin and escape controls.'],
+          ['<h2><span class="zh">代码主逻辑</span><span class="en">Core Logic</span></h2>', '<h2><span class="zh">策略运行流程</span><span class="en">Strategy Flow</span></h2>'],
+          ['<span class="zh">OnTick 启动</span><span class="en">OnTick</span>', '<span class="zh">启动检查</span><span class="en">Startup check</span>'],
+          ['<span class="zh">先检查有效期，再检查风控触发状态。</span><span class="en">Checks expiry first, then risk-stop status.</span>', '<span class="zh">策略先确认运行环境，再进入风控判断。</span><span class="en">The strategy checks the operating environment before risk review.</span>'],
+          ['<span class="zh">BUY 与 SELL 都执行 ProcessEngine。</span><span class="en">BUY and SELL both run ProcessEngine.</span>', '<span class="zh">多单与空单两套网格独立运行。</span><span class="en">Buy and sell grids run independently.</span>'],
+          ['代码解释：', '策略说明：'],
+          ['Code note:', 'Strategy note:'],
+          ['OnTick 内部先执行有效期检查。当前代码的账户白名单数组被注释，runok 被直接设为 1；但时间检查仍然生效，超过 2027-04-20 00:00 会 Alert 并 ExpertRemove。随后调用 RiskStopTriggeredNow。', '策略启动后先完成基础运行检查，然后进入账户风控与交易权限判断，确保每一次开仓和补仓都先经过风险边界确认。'],
+          ['OnTick checks expiry first. In the current code the account whitelist array is commented and runok is set to 1, while the time check remains active. After 2027-04-20 00:00 it alerts and removes the EA. RiskStopTriggeredNow is then called.', 'After startup, the strategy performs a basic operating check, then reviews risk controls and trading permissions before any new entry or grid addition.'],
+          ['EA 每 tick 分别执行 ProcessEngine(OP_BUY) 与 ProcessEngine(OP_SELL)。两个方向互不合并，分别统计订单数量、最后开仓价和加权均价。', '多单与空单采用两套独立引擎管理，分别统计持仓层数、最近入场价和均价止盈位置，避免两个方向的仓位互相干扰。'],
+          ['Every tick, the EA runs ProcessEngine(OP_BUY) and ProcessEngine(OP_SELL). The two sides are managed separately, each with its own order count, last entry price and weighted average.', 'Buy and sell positions are managed by two independent engines, each tracking its own layers, latest entry and average exit area.'],
+          ['某方向 count==0 时，如果 DMI_AllowOrder(type) 允许，就用 InpBaseLot 立即开首单。首单自带 InpTakeProfit=160 点的 TP；InpFirstStopLoss=0，所以默认首单不设置 SL。', '当某个方向没有持仓时，只要当前行情环境允许，就按基础手数建立首单。首单默认设置 160 点止盈，首单止损参数默认未开启。'],
+          ['When count==0 for one side, it opens immediately with InpBaseLot if DMI_AllowOrder(type) permits. The first order receives TP=160 points. InpFirstStopLoss=0, so no first-order SL is set by default.', 'When one side has no position and the market condition allows it, the strategy opens the first order with the base lot. The first order uses a 160-point TP by default, while first-order SL is off by default.'],
+          ['count<2 时只依靠首单 TP。count>=2 后，ManageExit 计算同方向加权均价，批量修改该方向所有订单的 TP；达到逃生层数后，均价 TP 从 120 点缩短到 10 点。InpBasketStopLoss=50000 时，还会为篮子订单设置很宽的均价止损。', '单笔持仓时使用首单止盈；同方向达到两单后，策略按加权均价统一管理止盈。达到逃生层数后，目标从 120 点缩短为 10 点，以更快降低风险暴露。'],
+          ['With count<2, the first order TP is used. From count>=2, ManageExit calculates same-side weighted average and modifies all same-side orders. At the escape layer, basket TP is shortened from 120 points to 10 points. With InpBasketStopLoss=50000, it also sets a wide basket SL.', 'A single position uses its first-order TP. From two positions on the same side, exits are managed around weighted average price. At the escape layer, the target is shortened from 120 to 10 points to reduce exposure faster.'],
+          ['逻辑源自 DMI_GetMarketState 与 DMI_AllowOrder', '震荡双向，趋势顺势，信号不明默认暂停'],
+          ['Driven by DMI_GetMarketState and DMI_AllowOrder', 'Range allows both sides, trend follows direction, unknown pauses by default'],
+          ['默认启用。代码内置计算，不依赖外部指标文件。它先判断震荡还是趋势，再用 EMA50 的位置与斜率判定顺势方向。', '默认启用。过滤模块随策略一起运行，不需要额外安装指标文件。它先判断震荡还是趋势，再用 EMA50 的位置与斜率判定顺势方向。'],
+          ['Enabled by default. The calculation is built into the EA and does not require an external indicator file. It first classifies range versus trend, then uses EMA50 position and slope to identify direction.', 'Enabled by default. The filter runs with the strategy and does not require an extra indicator file. It first classifies range versus trend, then uses EMA50 position and slope to identify direction.'],
+          ['首单使用 InpBaseLot。补仓手数由代码内固定阶梯决定，不完全跟随起始手数。默认 50 层以内，单边理论总手数约 13.07 手。', '首单使用 InpBaseLot。补仓手数采用预设阶梯，不完全跟随起始手数。默认 50 层以内，单边理论总手数约 13.07 手。'],
+          ['The first order uses InpBaseLot. Add-on lots are defined by a hard-coded ladder and do not fully scale with the base lot. Within 50 layers, default theoretical side exposure is about 13.07 lots.', 'The first order uses InpBaseLot. Add-on lots follow a preset ladder and do not fully scale with the base lot. Within 50 layers, default theoretical side exposure is about 13.07 lots.'],
+          ['这类策略的核心风险来自连续单边行情、点值差异、杠杆与滑点。代码有多层限制，但默认关闭了账户净值止损和浮亏金额止损，实盘前必须按账户资金重新设置。', '这类策略的核心风险来自连续单边行情、点值差异、杠杆与滑点。系统具备多层限制，但默认关闭了账户净值止损和浮亏金额止损，实盘前必须按账户资金重新设置。'],
+          ['The main risks are persistent one-way markets, broker point-value differences, leverage and slippage. The code has several limits, but equity stop and floating-loss stop are disabled by default and should be calibrated before live use.', 'The main risks are persistent one-way markets, broker point-value differences, leverage and slippage. The system has several limits, but equity stop and floating-loss stop are disabled by default and should be calibrated before live use.'],
+          ['代码内置 2027-04-20 00:00 有效期检查，超过后 EA 会提示升级并移除。', '策略版本会按服务周期维护，如需升级、续期或参数协助，可联系服务方处理。'],
+          ['The code includes an expiry check for 2027-04-20 00:00. After that time it alerts for upgrade and removes the EA.', 'The strategy version is maintained by service period. For upgrades, renewal or parameter assistance, contact the service provider.'],
+          ['有效期保护', '版本服务说明'],
+          ['Expiry guard', 'Version service'],
+          ['所有首单和补仓都会二次检查 DMI_AllowOrder。', '所有首单和补仓都会经过震荡趋势过滤确认。'],
+          ['All entries and additions are checked through DMI_AllowOrder.', 'All entries and additions pass the range-trend filter.'],
+          ['NormalizeTradeLot 会把超过 1.0 的下单手数压回上限。', '超过 1.0 手的单笔下单会被压回上限。'],
+          ['NormalizeTradeLot caps orders above 1.0 lot.', 'Any single order above 1.0 lot is capped.'],
+          ['BUY+SELL 总手数超过 50 前会被 RiskAllowNewOrder 拦截。', '若新订单会让总手数超过 50 手，策略会禁止继续开仓。'],
+          ['BUY+SELL total lots are blocked before exceeding 50.', 'A new order is blocked if total exposure would exceed 50 lots.'],
+          ['仅 count>=2 调用 ManageExit 时，根据均价为该方向订单设置止损。', '同方向达到两单后，会根据均价为该方向订单设置止损。'],
+          ['It is applied from count>=2 in ManageExit based on weighted average.', 'From two positions on one side, SL is set around weighted average price.'],
+          ['趋势判断门槛。代码用 vol > threshold 判断趋势，threshold 由 1.1 减去短长标准差比修正。', '趋势判断门槛。数值越敏感，越容易把波动扩张识别为趋势环境。'],
+          ['Trend threshold. The code treats vol > threshold as trend, where threshold is 1.1 minus the short/long standard-deviation ratio.', 'Trend threshold. More sensitive settings make volatility expansion easier to classify as a trend environment.']
+        ];
+        replacements.forEach(function(pair) {
+          html = html.split(pair[0]).join(pair[1]);
+        });
         document.open();
         document.write(html);
         document.close();
