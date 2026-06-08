@@ -8,25 +8,19 @@
   <style>
     html, body { margin: 0; min-height: 100%; background: #0b0b09; color: #f7f0e4; font-family: "Microsoft YaHei UI", "Segoe UI", sans-serif; }
     .loading { min-height: 100vh; display: grid; place-items: center; padding: 24px; text-align: center; }
-    a { color: #dfb650; }
   </style>
 </head>
 <body>
-  <div class="loading">
-    <div>
-      <h1>无限马丁震荡过滤风控</h1>
-      <p>页面加载中...</p>
-      <p><a href="martin-risk-filter/">备用入口</a></p>
-    </div>
-  </div>
+  <div class="loading"><div><h1>无限马丁震荡过滤风控</h1><p>页面加载中...</p></div></div>
   <script>
-    fetch('martin-risk-filter/index.html', { cache: 'no-cache' })
+    fetch('martin-risk-filter/index.html?v=' + Date.now(), { cache: 'no-cache' })
       .then(function(response) {
         if (!response.ok) throw new Error('HTTP ' + response.status);
         return response.text();
       })
       .then(function(html) {
-        var replacements = [
+        function swap(from, to) { html = html.split(from).join(to); }
+        [
           ['基于文件：无限马丁_最终版_震荡过滤风控.mq4。策略注释：交易有风险，投资者盈亏自负。', '汇交易策略研发中心出品'],
           ['Based on file: 无限马丁_最终版_震荡过滤风控.mq4. Trading involves risk and users are responsible for their own profit and loss.', 'Produced by Hui Trading Strategy R&D Center'],
           ['本介绍严格按照 MQ4 代码逻辑整理。EA 每个 tick 同时运行 BUY 与 SELL 两套独立引擎，默认先用内置 Damiani 风格的震荡趋势过滤判断市场状态：震荡允许双向，趋势只允许顺势方向；随后再通过手数、总仓、保证金、篮子止损与逃生模式进行风险约束。', '本策略采用 BUY 与 SELL 两套独立网格引擎，先通过震荡趋势过滤判断市场环境：震荡允许双向，趋势只允许顺势方向；随后再通过手数、总仓、保证金、篮子止损与逃生模式进行风险约束。'],
@@ -67,16 +61,17 @@
           ['It is applied from count>=2 in ManageExit based on weighted average.', 'From two positions on one side, SL is set around weighted average price.'],
           ['趋势判断门槛。代码用 vol > threshold 判断趋势，threshold 由 1.1 减去短长标准差比修正。', '趋势判断门槛。数值越敏感，越容易把波动扩张识别为趋势环境。'],
           ['Trend threshold. The code treats vol > threshold as trend, where threshold is 1.1 minus the short/long standard-deviation ratio.', 'Trend threshold. More sensitive settings make volatility expansion easier to classify as a trend environment.']
-        ];
-        replacements.forEach(function(pair) {
-          html = html.split(pair[0]).join(pair[1]);
-        });
+        ].forEach(function(pair) { swap(pair[0], pair[1]); });
+
+        swap('      grid-template-columns: 52px 1fr 58px;', '      grid-template-columns: 64px 1fr 58px;');
+        swap('      bars.unshift(`<div class="bar-row"><span>${currentLang === "zh" ? "合计" : "Sum"}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.min(100, sumLots(layer + 1) / 13.07 * 100)}%"></div></div><span>${sumLots(layer + 1).toFixed(2)}</span></div>`);', '      const existingTotal = sumLots(layer);\n      const afterAddTotal = existingTotal + lot;\n      bars.unshift(`<div class="bar-row"><span>${currentLang === "zh" ? "加仓后" : "After"}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.min(100, afterAddTotal / 13.07 * 100)}%"></div></div><span>${afterAddTotal.toFixed(2)}</span></div>`);\n      bars.unshift(`<div class="bar-row"><span>${currentLang === "zh" ? "已持仓" : "Open"}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.min(100, existingTotal / 13.07 * 100)}%"></div></div><span>${existingTotal.toFixed(2)}</span></div>`);');
+
         document.open();
         document.write(html);
         document.close();
       })
       .catch(function() {
-        document.querySelector('.loading p').textContent = '页面加载失败，请使用备用入口。';
+        document.querySelector('.loading p').textContent = '页面加载失败，请刷新重试。';
       });
   </script>
 </body>
