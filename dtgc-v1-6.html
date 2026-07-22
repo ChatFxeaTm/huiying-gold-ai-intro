@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>匯鹰量化｜DTGC v1.6 黄金趋势系统</title>
+<style>
+:root{--bg:#0b0f14;--card:#141a22;--line:#293341;--gold:#d6b35a;--text:#eef2f6;--muted:#aab5c2;--green:#7fd39b;--red:#ef8d8d}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif}main{max-width:980px;margin:auto;padding:34px 20px 70px}header,section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:24px;margin-bottom:18px}h1{margin:0 0 8px;color:var(--gold);font-size:30px}h2{font-size:21px;border-bottom:1px solid var(--line);padding-bottom:9px}h3{font-size:17px}.tag{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:3px 10px;margin:4px 5px 4px 0;color:var(--gold)}table{width:100%;border-collapse:collapse}th,td{border:1px solid var(--line);padding:9px;text-align:left;vertical-align:top}th{background:#1b2430}code,pre{background:#090c10;border:1px solid var(--line);border-radius:7px;font-family:Consolas,monospace}code{padding:2px 6px}pre{padding:14px;overflow:auto}.warn{color:#f0bb72}.good{color:var(--green)}.muted{color:var(--muted)}
+</style>
+</head>
+<body><main>
+<header>
+<h1>匯鹰量化 · DTGC v1.6</h1>
+<p>Donchian–Turtle Gold Compound：面向 XAUUSD 的 H4 / H1 / M15 多周期趋势跟踪验证系统。</p>
+<span class="tag">MT4 / MQL4</span><span class="tag">XAUUSD M15</span><span class="tag">突破—回踩—二次启动</span>
+<p class="warn"><strong>风险声明：</strong>本系统不承诺盈利、胜率或特定收益。代码结构严密不等于策略已经获得正期望。</p>
+</header>
+<section><h2>策略结构</h2>
+<table><tr><th>周期</th><th>职责</th></tr><tr><td>H4</td><td>环境否决：趋势方向、唐奇安中轨斜率、极端乖离、大K线与低波动。</td></tr><tr><td>H1</td><td>五项评分：位置、斜率、近期突破、ADX/DI、ATR相对中值。达到4分才允许新仓。</td></tr><tr><td>M15</td><td>唐奇安有效突破后等待回踩，并以二次启动触发入场，降低裸追突破造成的假信号。</td></tr></table>
+</section>
+<section><h2>风险控制</h2><ul>
+<li>手数根据复利基数、风险百分比、止损距离、TickSize与TickValue计算。</li>
+<li>计算手数低于经纪商最小手数时拒绝开仓，不向上强制取整。</li>
+<li>连续亏损、账户回撤、每日亏损与每日初始仓失败次数均可降低风险或阻止新仓。</li>
+<li>禁止马丁、亏损加仓；只允许一次由浮盈支持的加仓。</li>
+<li>保护价格可计入点差、配置佣金与退出滑点预留，但跳空仍可能穿透止损。</li>
+</ul></section>
+<section><h2>执行与状态恢复</h2><ul>
+<li>支持Tick触发市价单与服务器BuyStop/SellStop两种模式。</li>
+<li>Stop挂单可降低客户端触发延迟，但不能消除跳空或市场滑点。</li>
+<li>初始仓与加仓仓使用独立Magic Number。</li>
+<li>初始R、原始手数、MFE及动作状态使用终端全局变量，并以订单Comment和历史订单作恢复冗余。</li>
+</ul></section>
+<section><h2>图表诊断面板</h2><p>v1.6将旧版“一个多行OBJ_LABEL”改为“每行一个标签对象”，解决部分MT4、Wine或VPS环境只显示黑色背景的问题。</p><ul>
+<li>展开：显示状态、不开单原因、H4/H1评分、ATR、点差、风险、持仓、外部暴露和保护状态。</li>
+<li>最小化：仅显示 <strong>匯鹰.量化 +</strong>。</li>
+<li>点击右上角按钮可最小化或恢复。</li>
+</ul></section>
+<section><h2>验证要求</h2><ul>
+<li>真实Tick、浮动点差、真实佣金与随机滑点。</li><li>样本内、样本外和滚动前向测试。</li><li>至少两个经纪商报价源。</li><li>参数上下扰动，观察稳定盈利平原，而非单一最优点。</li></ul><p class="good">只有成本后的样本外表现稳定，才有资格讨论正期望。</p></section>
+<section><h2>版本信息</h2><p>公开说明页版本：DTGC v1.6。源码与编译文件由匯鹰量化单独管理，本页不构成投资建议。</p><p class="muted">更新日期：2026-07-21</p></section>
+</main></body></html>
