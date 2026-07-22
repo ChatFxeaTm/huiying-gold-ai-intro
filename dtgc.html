@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>匯鹰量化 DTGC 黄金趋势系统说明</title>
+  <meta name="description" content="匯鹰量化 DTGC 唐奇安-海龟黄金复利系统的策略逻辑、风险控制、状态机、面板说明与验证要求。">
+  <style>
+    :root{--bg:#0d0f14;--panel:#171a21;--line:#343a46;--gold:#d7b45a;--text:#eef1f5;--muted:#aeb6c2;--green:#82c995;--red:#ee7a72}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 15% 0,rgba(215,180,90,.11),transparent 34%),var(--bg);color:var(--text);font:16px/1.75 "Microsoft YaHei","PingFang SC",sans-serif}
+    a{color:#f0d98a;text-decoration:none}.wrap{width:min(1120px,calc(100% - 32px));margin:auto}.top{position:sticky;top:0;z-index:10;background:rgba(13,15,20,.91);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+    nav{display:flex;align-items:center;justify-content:space-between;min-height:62px;gap:16px}.brand{font-weight:900;color:var(--gold)}.links{display:flex;gap:12px;flex-wrap:wrap;font-size:14px}
+    header{padding:78px 0 48px;border-bottom:1px solid var(--line)}h1{margin:0 0 18px;font-size:clamp(38px,6vw,72px);line-height:1.05}.lead{max-width:820px;color:#d9dde4;font-size:19px}
+    .badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:24px}.badge{padding:5px 10px;border:1px solid rgba(215,180,90,.38);border-radius:999px;color:#f0d98a;background:rgba(215,180,90,.07)}
+    section{padding:58px 0}.card,.grid>div{background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.02));border:1px solid var(--line);border-radius:10px;padding:22px}
+    h2{font-size:32px;margin:0 0 20px}h3{color:#f0d98a;margin-top:0}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.flow{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+    .step{min-height:155px}.n{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--gold);color:#111;font-weight:900;margin-bottom:10px}
+    table{width:100%;border-collapse:collapse}th,td{border:1px solid var(--line);padding:10px;text-align:left;vertical-align:top}th{background:#222630;color:#f0d98a}
+    code,pre{font-family:Consolas,monospace;background:#090b0f;border:1px solid var(--line);border-radius:6px}code{padding:2px 5px}pre{padding:14px;overflow:auto}.warn{color:#f2b66d}.good{color:var(--green)}footer{padding:28px 0 54px;color:var(--muted);border-top:1px solid var(--line)}
+    @media(max-width:850px){.grid,.flow{grid-template-columns:1fr}.links{display:none}}
+  </style>
+</head>
+<body>
+<div class="top"><div class="wrap"><nav><div class="brand">匯鹰量化 · DTGC</div><div class="links"><a href="#logic">逻辑</a><a href="#risk">风控</a><a href="#panel">面板</a><a href="#deploy">部署</a><a href="#validate">验证</a></div></nav></div></div>
+<header><div class="wrap"><h1>DTGC 唐奇安－海龟<br>黄金趋势复利系统</h1><p class="lead">面向 XAUUSD 的 H4／H1／M15 多周期趋势验证 EA。H4 负责环境否决，H1 量化趋势质量，M15 执行“突破－回踩－二次启动”。系统禁止马丁和亏损加仓，只允许一次由浮盈支持的顺势加仓。</p><div class="badges"><span class="badge">MT4 / MQL4</span><span class="badge">XAUUSD M15</span><span class="badge">Donchian + Turtle</span><span class="badge">动态风险手数</span><span class="badge">状态恢复</span></div><p class="warn"><strong>风险提示：</strong>代码结构严密不等于策略已经盈利。胜率、收益和正期望必须由计入点差、佣金、滑点后的样本外测试与前向交易证明。</p></div></header>
+<main>
+<section id="logic"><div class="wrap"><h2>一、核心交易流程</h2><div class="flow"><div class="card step"><span class="n">1</span><h3>H4 环境否决</h3><p>过滤方向不清、极端乖离、异常大K线和低波动环境。</p></div><div class="card step"><span class="n">2</span><h3>H1 五项评分</h3><p>位置、斜率、近期突破、ADX/DI 和 ATR 相对中值。</p></div><div class="card step"><span class="n">3</span><h3>M15 有效突破</h3><p>实体、振幅、收盘位置、通道缓冲和点差共同确认。</p></div><div class="card step"><span class="n">4</span><h3>回踩确认</h3><p>允许影线回踩，但禁止实体确认失败和结构破坏。</p></div><div class="card step"><span class="n">5</span><h3>二次启动</h3><p>进入待触发状态，可使用 Tick 市价或服务器 Stop 挂单。</p></div><div class="card step"><span class="n">6</span><h3>持仓管理</h3><p>保护、一次盈利加仓、时间效率退出和趋势跟踪退出。</p></div></div></div></section>
+<section id="risk"><div class="wrap"><h2>二、风险控制</h2><div class="grid"><div><h3>仓位与止损</h3><ul><li>手数按复利基数、风险百分比和真实止损距离计算。</li><li>计算手数低于平台最小手数时直接拒绝，不向上强制取整。</li><li>止损同时考虑结构位置、稳健 ATR、点差和经纪商 StopLevel。</li></ul></div><div><h3>账户保护</h3><ul><li>连续亏损后自动降低风险。</li><li>回撤达到降级线后进一步缩仓。</li><li>每日初始仓亏损次数、每日亏损和硬回撤线可禁止新仓。</li><li>支持外部持仓与挂单隔离。</li></ul></div><div><h3>盈利加仓</h3><ul><li>仅在初始仓达到保护阈值后允许一次加仓。</li><li>加仓后尝试把整组止损推到计入成本的加权保护价。</li><li>跳空可能穿透止损，因此“风险中性”只能理解为正常报价条件下的估算。</li></ul></div><div><h3>退出机制</h3><ul><li>时间与价格联合失效，而不是单纯到时强平。</li><li>可选 2R 部分止盈或纯趋势退出。</li><li>M15 唐奇安、ATR 追踪和 H1 结构失效共同管理剩余仓位。</li></ul></div></div></div></section>
+<section id="panel"><div class="wrap"><h2>三、图表状态面板</h2><div class="card"><p>面板显示当前状态机阶段、不开单原因、H4方向、H1多空评分、M15信号阶段、稳健ATR、点差、风险比例、复利基数、回撤、当日盈亏、持仓R值、挂单状态和保护动作。</p><p>新版面板采用<strong>逐行标签</strong>，避免 MT4 的多行 <code>OBJ_LABEL</code> 在部分终端只显示黑色背景的问题。右上角按钮可最小化或最大化；最小化时只显示：</p><pre>匯鹰.量化 +</pre></div></div></section>
+<section id="deploy"><div class="wrap"><h2>四、部署与使用</h2><table><tr><th>项目</th><th>要求</th></tr><tr><td>图表</td><td>XAUUSD，M15</td></tr><tr><td>数据</td><td>尽量使用真实 Tick、浮动点差和真实佣金</td></tr><tr><td>账户</td><td>确认 TickSize、TickValue、LotStep、MinLot 与佣金设置</td></tr><tr><td>切换版本</td><td>旧版有持仓时不要热切换；等待持仓结束后再替换</td></tr><tr><td>新闻</td><td>当前核心版使用手动新闻冻结，不包含外部新闻接口</td></tr></table></div></section>
+<section id="validate"><div class="wrap"><h2>五、验证标准</h2><div class="card"><ul><li>样本内、样本外和滚动前向测试。</li><li>至少两个报价源，加入浮动点差、佣金和随机滑点。</li><li>参数上下扰动，寻找稳定盈利平原而不是单点最优。</li><li>分别比较市价触发与服务器 Stop 挂单。</li><li>重点观察期望R、Profit Factor、最大回撤、最长连亏、年度依赖度和交易数量。</li></ul><p class="good">只有成本后的样本外结果稳定，才有资格讨论长期正期望。</p></div></div></section>
+</main>
+<footer><div class="wrap">© 匯鹰量化 · DTGC 公开策略说明页。页面不包含 EA 源码、编译文件、参数模板或内部交易记录。</div></footer>
+</body>
+</html>
