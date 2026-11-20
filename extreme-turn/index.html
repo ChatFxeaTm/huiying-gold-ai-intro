@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#11110f">
+  <title>汇鹰·极值转折交易系统 V1.10 | 黄金 MT4 策略介绍</title>
+  <meta name="description" content="适用于 MT4 黄金的多周期结构与箱体回踩策略。用交互图了解 H1 定方向、M5 找箱体、中线回踩、极值止损与持仓保护。">
+  <link rel="canonical" href="https://chatfxeatm.github.io/huiying-gold-ai-intro/extreme-turn/">
+  <meta property="og:title" content="汇鹰·极值转折交易系统 V1.10">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:url" content="https://chatfxeatm.github.io/huiying-gold-ai-intro/extreme-turn/">
+  <meta property="og:description" content="H1 定方向，M5 等箱体回踩。交互演示黄金的入场、初始止损和持仓保护。">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #11110f;
+      --surface: #171713;
+      --terminal: #11120f;
+      --line: #353126;
+      --line-light: #4b402d;
+      --ink: #f5efe4;
+      --muted: #b8b1a2;
+      --soft: #d8cbb5;
+      --champagne: #eccc95;
+      --gold: #d2a76a;
+      --rise: #8cc6a9;
+      --fall: #df9c8e;
+      --serif: "Songti SC", "Noto Serif CJK SC", "Source Han Serif SC", "STSong", SimSun, serif;
+      --sans: "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      font-family: var(--sans);
+      text-rendering: optimizeLegibility;
+      scroll-behavior: smooth;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--ink); font-size: 15px; line-height: 1.75; }
+    a { color: inherit; text-decoration: none; }
+    button { font: inherit; color: inherit; cursor: pointer; }
+    button:focus-visible, a:focus-visible { outline: 2px solid var(--champagne); outline-offset: 5px; }
+    .shell { width: min(1280px, calc(100% - 88px)); margin-inline: auto; }
+    .masthead { border-bottom: 1px solid var(--line); }
+    .masthead .shell { min-height: 69px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+    .brand { display: inline-flex; align-items: center; gap: 10px; flex: none; font-size: 14px; letter-spacing: .11em; color: var(--champagne); }
+    .brand img { width: 36px; height: 36px; object-fit: contain; border: 1px solid var(--line-light); border-radius: 50%; }
+    .nav { display: flex; gap: clamp(14px, 3vw, 34px); align-items: center; font-size: 13px; color: var(--muted); }
+    .nav a { padding-block: 8px; white-space: nowrap; }
+    .nav a:hover, .footer a:hover { color: var(--champagne); }
+    .hero {
+      position: relative;
+      background:
+        radial-gradient(ellipse at 25% 34%, rgba(157, 106, 48, .15), transparent 58%),
+        radial-gradient(ellipse at 85% 4%, rgba(160, 129, 80, .08), transparent 51%),
+        var(--bg);
+      border-bottom: 1px solid var(--line);
+    }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, .78fr) minmax(0, 1.28fr);
+      gap: clamp(32px, 5vw, 76px);
+      align-items: center;
+      padding-block: clamp(54px, 6.4vw, 94px) clamp(57px, 7vw, 105px);
+    }
+    .kicker { display: flex; gap: 10px; align-items: center; margin: 0 0 23px; color: var(--champagne); font-size: 12px; letter-spacing: .08em; }
+    .kicker::before { content: ""; width: 27px; height: 1px; background: var(--gold); }
+    .kicker strong { font-family: var(--mono); font-weight: 500; letter-spacing: .08em; }
+    h1, h2 { font-family: var(--serif); font-weight: 700; margin: 0; line-height: 1.18; }
+    h1 { font-size: clamp(46px, 5.7vw, 91px); letter-spacing: .018em; }
+    h1 span { display: block; color: var(--champagne); }
+    .hero-copy > p:nth-of-type(2) { max-width: 25em; margin: 24px 0 0; color: var(--muted); font-size: clamp(15px, 1.32vw, 18px); line-height: 1.9; }
+    .hero-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 15px 23px; margin-top: 27px; }
+    .primary { display: inline-flex; align-items: center; justify-content: center; gap: 13px; min-height: 45px; padding: 10px 18px; background: var(--champagne); color: #1e1711; border: 1px solid var(--champagne); font-weight: 700; font-size: 14px; }
+    .primary:hover { background: #f7dbad; }
+    .secondary { color: var(--soft); font-size: 14px; border-bottom: 1px solid var(--line-light); }
+    .secondary:hover { color: var(--champagne); border-color: var(--champagne); }
+    .hero-spec { display: flex; flex-wrap: wrap; gap: 13px 20px; padding-top: 20px; margin: 25px 0 0; border-top: 1px solid var(--line); }
+    .hero-spec > div + div { padding-left: 20px; border-left: 1px solid var(--line); }
+    .hero-spec dt { font-size: 12px; color: var(--muted); }
+    .hero-spec dd { font-family: var(--mono); font-size: 17px; font-variant-numeric: tabular-nums; line-height: 1.35; margin: 3px 0 0; color: var(--ink); }
+    .demo {
+      min-width: 0; margin: 0; border: 1px solid var(--line-light); background: var(--terminal);
+      box-shadow: 0 24px 60px rgb(0 0 0 / .32), 0 0 55px rgb(202 150 72 / .07);
+      scroll-margin-top: 18px;
+    }
+    .demo-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 13px 17px; border-bottom: 1px solid var(--line); }
+    .demo-label { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 11px; line-height: 1.4; }
+    .demo-label strong { font: 15px/1.4 var(--mono); color: var(--ink); letter-spacing: .04em; }
+    .demo-label span { color: var(--muted); font-size: 12px; }
+    .direction { display: inline-flex; align-items: center; border: 1px solid var(--line); padding: 3px; flex: none; }
+    .direction button { background: transparent; border: 0; font-size: 12px; line-height: 1.55; color: var(--muted); padding: 4px 11px; white-space: nowrap; }
+    .direction button[aria-pressed="true"] { background: #30291d; color: var(--champagne); }
+    .direction button:hover, .stage:hover { color: var(--champagne); }
+    .chart { display: block; width: 100%; height: clamp(245px, 24vw, 345px); }
+    .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; min-height: 30px; padding: 0 16px 11px; color: var(--muted); font-size: 11px; }
+    .legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .legend i { display: inline-block; height: 2px; width: 12px; background: var(--gold); }
+    .legend .midpoint i { background: transparent; border-top: 2px dotted var(--champagne); }
+    .legend .stop i { background: var(--fall); }
+    .stages { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border-block: 1px solid var(--line); margin: 0; padding: 0; list-style: none; }
+    .stages li { min-width: 0; }
+    .stages li + li { border-left: 1px solid var(--line); }
+    .stage { display: block; width: 100%; min-height: 41px; background: transparent; border: 0; padding: 5px 4px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .stage[aria-current="step"] { background: #2b2419; color: var(--champagne); box-shadow: inset 0 2px var(--gold); }
+    .demo-caption { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 13px; align-items: center; padding: 15px 17px 17px; min-height: 94px; }
+    .demo-caption strong { display: block; color: var(--ink); font-size: 14px; }
+    .demo-caption p { margin: 2px 0 0; color: var(--muted); font-size: 12px; line-height: 1.65; }
+    .player { display: flex; gap: 5px; align-items: center; }
+    .player button { min-width: 31px; height: 31px; white-space: nowrap; padding: 0 8px; border: 1px solid var(--line-light); background: #1b1914; color: var(--champagne); font-size: 12px; }
+    .player button:hover { background: #342a1a; }
+    .player button:disabled { opacity: .45; cursor: default; }
+    .section { padding-block: clamp(66px, 8vw, 110px); scroll-margin-top: 12px; }
+    .split { display: grid; grid-template-columns: minmax(190px, .54fr) minmax(0, 1.46fr); gap: clamp(28px, 5vw, 72px); align-items: start; }
+    .heading h2 { font-size: clamp(32px, 4.3vw, 60px); color: var(--ink); }
+    .heading > p { color: var(--muted); margin: 17px 0 0; max-width: 24em; }
+    .steps { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line-light); }
+    .steps li { display: grid; grid-template-columns: minmax(114px, .43fr) minmax(0, 1fr); gap: clamp(14px, 4vw, 40px); padding: 17px 0 19px; border-bottom: 1px solid var(--line); }
+    .steps h3 { margin: 0; color: var(--champagne); font-size: 17px; line-height: 1.55; font-weight: 600; }
+    .steps p { margin: 0; color: var(--muted); }
+    .risk { border-block: 1px solid var(--line); background: var(--surface); }
+    .risk-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 26px; }
+    .risk-item { border-top: 1px solid var(--line-light); padding: 15px 0 18px; }
+    .risk-item > b { display: block; color: var(--champagne); font-family: var(--mono); font-size: clamp(24px, 3.3vw, 40px); font-weight: 400; line-height: 1.25; }
+    .risk-item h3 { margin: 6px 0 3px; font-size: 15px; }
+    .risk-item p { margin: 0; color: var(--muted); font-size: 14px; }
+    .policy { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(96px, .27fr) minmax(0, 1fr); gap: 19px; padding: 14px 15px; border: 1px solid var(--line); margin-top: 8px; background: var(--terminal); font-size: 13px; }
+    .policy strong { color: var(--champagne); align-self: start; }
+    .policy p { margin: 0; color: var(--muted); }
+    .settings { border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 14px; }
+    .settings th, .settings td { padding: 12px 11px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+    .settings thead th { color: var(--champagne); font-weight: 600; background: var(--surface); border-block: 1px solid var(--line-light); }
+    .settings thead th:first-child { width: 23%; }
+    .settings thead th:nth-child(2) { width: 27%; }
+    .settings tbody th { font-weight: 600; }
+    .settings tbody td { color: var(--muted); }
+    .settings tbody td:nth-child(2) { color: var(--soft); }
+    .section-note { font-size: 13px; color: var(--muted); margin: 13px 0 0; }
+    .footer { border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); }
+    .footer .shell { display: flex; justify-content: space-between; gap: 10px 28px; padding-block: 23px; }
+    .footer a { color: var(--soft); white-space: nowrap; }
+    .footer p { margin: 0; }
+    @media (max-width: 975px) {
+      .shell { width: min(830px, calc(100% - 54px)); }
+      .hero-grid { grid-template-columns: minmax(0, 1fr); gap: 38px; }
+      h1 span { display: inline; }
+      .hero-copy > p:nth-of-type(2) { max-width: 37em; }
+      .hero-spec { max-width: 355px; }
+      .chart { height: clamp(263px, 44vw, 338px); }
+      .split { grid-template-columns: minmax(0, 1fr); gap: 26px; }
+      .heading > p { max-width: 32em; }
+    }
+    @media (max-width: 520px) {
+      .shell { width: calc(100% - 32px); }
+      .masthead .shell { min-height: 60px; gap: 10px; }
+      .brand { font-size: 13px; gap: 7px; letter-spacing: .04em; }
+      .brand img { width: 31px; height: 31px; }
+      .nav { gap: 12px; font-size: 12px; }
+      .hero-grid { gap: 30px; padding-block: 39px 46px; }
+      .kicker { margin-bottom: 15px; }
+      h1 { font-size: clamp(34px, 9.65vw, 49px); }
+      .hero-copy > p:nth-of-type(2) { margin-top: 18px; }
+      .hero-actions { margin-top: 21px; row-gap: 10px; }
+      .hero-spec { padding-top: 14px; margin-top: 19px; }
+      .demo-top { padding: 10px; gap: 6px; }
+      .demo-label { gap: 4px 7px; }
+      .demo-label strong { font-size: 13px; }
+      .demo-label span, .direction button { font-size: 11px; }
+      .direction button { padding: 4px 7px; }
+      .chart { height: 242px; }
+      .legend { padding-inline: 10px; }
+      .stage { font-size: 11px; }
+      .demo-caption { padding: 11px; grid-template-columns: 1fr; gap: 9px; min-height: 122px; }
+      .player button { min-width: 37px; }
+      .steps li { grid-template-columns: 1fr; gap: 3px; padding: 12px 0 15px; }
+      .steps h3 { font-size: 15px; }
+      .risk-list { column-gap: 13px; }
+      .risk-item p { font-size: 13px; }
+      .policy { grid-template-columns: 1fr; gap: 3px; }
+      .settings { font-size: 12px; }
+      .settings th, .settings td { padding: 9px 5px; }
+      .footer .shell { flex-wrap: wrap; justify-content: flex-start; }
+    }
+    @media (max-width: 335px) {
+      .shell { width: calc(100% - 24px); }
+      .nav { gap: 8px; font-size: 11px; }
+      .demo-label span { width: 100%; }
+      .stage { font-size: 10px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; }
+    }
+  </style>
+</head>
+<body>
+  <header class="masthead" id="top">
+    <div class="shell">
+      <a class="brand" href="../" aria-label="汇鹰量化首页">
+        <img width="36" height="36" alt="" src="data:image/webp;base64,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">
+        <span>汇鹰量化</span>
+      </a>
+      <nav class="nav" aria-label="页面导航">
+        <a href="#strategy">交易逻辑</a>
+        <a href="#risk">风险控制</a>
+        <a href="#settings">默认设置</a>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <section class="hero" aria-labelledby="title">
+      <div class="shell hero-grid">
+        <div class="hero-copy">
+          <p class="kicker"><strong>MT4 · XAUUSD</strong> <span>V1.10</span></p>
+          <h1 id="title" aria-label="极值转折交易系统">极值转折<span>交易系统</span></h1>
+          <p>用大周期结构定方向，等价格回踩小周期箱体中线。以箱体影线极值设置初始止损，随新的摆动点推进保护。</p>
+          <div class="hero-actions">
+            <a class="primary" href="#demo">看入场演示 <span aria-hidden="true">↓</span></a>
+            <a class="secondary" href="#settings">查看默认参数</a>
+          </div>
+          <dl class="hero-spec">
+            <div><dt>方向判断</dt><dd>H1</dd></div>
+            <div><dt>箱体与回踩</dt><dd>M5</dd></div>
+            <div><dt>单笔默认风险</dt><dd>1.00%</dd></div>
+          </dl>
+        </div>
+        <figure class="demo" id="demo" aria-labelledby="chart-title">
+          <div class="demo-top">
+            <div class="demo-label"><strong id="chart-title">XAUUSD / M5</strong><span>模拟行情</span></div>
+            <div class="direction" role="group" aria-label="选择演示方向">
+              <button type="button" data-direction="long" aria-pressed="true">多头</button>
+              <button type="button" data-direction="short" aria-pressed="false">空头</button>
+            </div>
+          </div>
+          <canvas class="chart" id="chart" role="img" aria-label="模拟黄金 K 线图">模拟黄金 K 线。使用下方步骤了解箱体、中线回踩和初始止损。</canvas>
+          <div class="legend" aria-hidden="true"><span><i></i>箱体</span><span class="midpoint"><i></i>中线带</span><span class="stop"><i></i>止损</span></div>
+          <ol class="stages" aria-label="演示步骤">
+            <li><button class="stage" type="button" data-stage="0">定方向</button></li>
+            <li><button class="stage" type="button" data-stage="1">画箱体</button></li>
+            <li><button class="stage" type="button" data-stage="2">收盘离箱</button></li>
+            <li><button class="stage" type="button" data-stage="3" aria-current="step">中线入场</button></li>
+            <li><button class="stage" type="button" data-stage="4">跟踪止损</button></li>
+          </ol>
+          <figcaption class="demo-caption">
+            <div aria-live="polite">
+              <strong id="step-title">回踩中线即可触发</strong>
+              <p id="step-text">按可成交报价检查中线带，入场无需等待 K 线形态。</p>
+            </div>
+            <div class="player" role="group" aria-label="演示播放控制">
+              <button type="button" id="prev" aria-label="上一步">←</button>
+              <button type="button" id="play">播放</button>
+              <button type="button" id="next" aria-label="下一步">→</button>
+            </div>
+          </figcaption>
+          <noscript><p class="section-note" style="padding:0 14px 10px">启用 JavaScript 可播放互动演示，下方提供完整交易逻辑。</p></noscript>
+        </figure>
+      </div>
+    </section>
+    <section class="section" id="strategy" aria-labelledby="strategy-title">
+      <div class="shell split">
+        <div class="heading">
+          <h2 id="strategy-title">交易逻辑</h2>
+          <p>结构、箱体、回踩和持仓保护分别由不同条件触发。</p>
+        </div>
+        <ol class="steps">
+          <li><h3>结构定方向</h3><p>以已确认的大周期摆动判断结构。摆动高低点同步抬高时只做多，同步降低时只做空，方向不明时等待。</p></li>
+          <li><h3>反复触沿成箱</h3><p>默认观察 8–24 根已收盘 M5 K 线，以最高和最低影线定上下沿。上下沿各至少有 3 次独立测试，价格顺大周期方向收盘离箱后才开始等待回踩。</p></li>
+          <li><h3>中线带入场</h3><p>中线带默认向两侧各扩展箱宽的 5%。可成交报价到位且通过放行检查时触发入场，无需等待 K 线形态。首轮错过且箱体仍有效，须重新离箱确认，才允许第二次回踩补进。</p></li>
+          <li><h3>摆动推进保护</h3><p>多单初始止损在箱底外，空单在箱顶外，黄金默认偏移 2.00 美元。订单带服务器止损。新摆动确认后只往收紧方向推止损，策略无固定止盈。</p></li>
+        </ol>
+      </div>
+    </section>
+    <section class="section risk" id="risk" aria-labelledby="risk-title">
+      <div class="shell split">
+        <div class="heading">
+          <h2 id="risk-title">风险控制</h2>
+          <p>入场前检查风险预算与新闻窗口，出场后更新当日连损状态。</p>
+        </div>
+        <div class="risk-list">
+          <article class="risk-item"><b>1% / 2%</b><h3>单笔计划风险</h3><p>默认使用净值的 1%，最高 2%。根据入场到止损的距离和交易成本计算手数，向下对齐交易商步长。</p></article>
+          <article class="risk-item"><b>±30 min</b><h3>新闻禁开窗口</h3><p>重要美元数据前后各 30 分钟暂停新入场。窗口开始时已有浮盈的仓位按规则尝试推保本。</p></article>
+          <article class="risk-item"><b>2 次</b><h3>当日连损暂停</h3><p>连续两次亏损止损后，默认暂停当天的新入场，已有持仓仍按既定规则管理。</p></article>
+          <article class="risk-item"><b>2.00</b><h3>黄金极值偏移</h3><p>默认在箱体防守侧的影线极值外留出 2.00 美元的价格距离，形成初始服务器止损。</p></article>
+          <div class="policy"><strong>计划风险与成交</strong><p>风险预算用于开仓前估算。遇到跳空、流动性不足、滑点或费用变化时，实际亏损可能超过计划风险。</p></div>
+        </div>
+      </div>
+    </section>
+    <section class="section" id="settings" aria-labelledby="settings-title">
+      <div class="shell split">
+        <div class="heading">
+          <h2 id="settings-title">默认设置</h2>
+          <p>V1.10 提供可调策略设置。下表给出本页演示所用的默认口径。</p>
+        </div>
+        <div>
+          <table class="settings">
+            <thead><tr><th scope="col">设置</th><th scope="col">默认值</th><th scope="col">处理方式</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">周期</th><td>H1 / M5</td><td>大周期判方向，小周期识别箱体和持仓摆动。</td></tr>
+              <tr><th scope="row">箱体窗口</th><td>8–24 根，双边各 3 次</td><td>以影线极值确定边界，合格离箱后冻结箱体。</td></tr>
+              <tr><th scope="row">回踩</th><td>中线 ±5%，至多两轮</td><td>按箱宽计算中线带。同一箱体最多一笔成交。</td></tr>
+              <tr><th scope="row">初始保护</th><td>极值外 2.00 美元</td><td>服务器止损，跟踪时仅收紧，无固定止盈。</td></tr>
+              <tr><th scope="row">风险</th><td>1.00%，上限 2.00%</td><td>按账户净值与计划损失定手数。</td></tr>
+              <tr><th scope="row">暂停</th><td>新闻 ±30 分钟，连损 2 次</td><td>满足条件时暂停新入场，继续管理已有持仓。</td></tr>
+            </tbody>
+          </table>
+          <p class="section-note">页面图表使用模拟行情演示一种执行路径。实际触发取决于报价、策略设置与券商交易条件。</p>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer class="footer">
+    <div class="shell">
+      <p>汇鹰·极值转折交易系统 V1.10</p>
+      <a href="#top">返回页首 ↑</a>
+    </div>
+  </footer>
+  <script>
+    const samples = [
+      [2368.9,2370.1,2368.2,2369.8],[2369.8,2371.0,2369.1,2370.7],
+      [2370.7,2371.3,2370.1,2370.4],[2370.4,2372.8,2370.2,2372.5],
+      [2372.5,2374.1,2371.9,2373.8],[2373.8,2374.8,2373.0,2373.3],
+      [2373.3,2374.4,2371.0,2373.8],[2373.8,2377.5,2373.2,2377.1],
+      [2377.1,2381.0,2376.5,2379.1],[2379.1,2379.6,2375.0,2375.8],
+      [2375.8,2376.9,2371.5,2372.7],[2372.7,2377.6,2372.4,2376.9],
+      [2376.9,2380.5,2376.1,2379.4],[2379.4,2379.6,2374.9,2375.4],
+      [2375.4,2376.1,2371.2,2372.9],[2372.9,2377.8,2372.5,2377.5],
+      [2377.5,2380.8,2376.7,2379.3],[2379.3,2379.7,2376.8,2378.4],
+      [2378.4,2383.4,2378.0,2382.7],[2382.7,2385.4,2382.0,2384.8],
+      [2384.8,2386.3,2384.0,2385.5],[2385.5,2385.7,2383.4,2384.1],
+      [2384.1,2385.0,2382.0,2382.5],[2382.5,2383.2,2379.6,2380.0],
+      [2380.0,2380.9,2375.7,2376.8],[2376.8,2380.8,2376.0,2379.9],
+      [2379.9,2383.9,2379.2,2383.1],[2383.1,2384.3,2381.8,2382.9],
+      [2382.9,2383.5,2380.1,2380.8],[2380.8,2381.0,2378.3,2379.6],
+      [2379.6,2382.3,2379.1,2381.6],[2381.6,2385.2,2381.0,2384.7],
+      [2384.7,2387.6,2384.3,2387.1],[2387.1,2388.9,2386.1,2387.8],
+      [2387.8,2389.8,2387.1,2389.4],[2389.4,2390.2,2388.2,2388.9],
+      [2388.9,2390.7,2388.0,2390.2],[2390.2,2391.2,2389.7,2390.8]
+    ];
+    const view = [
+      { count: 7, title: "先确认 H1 方向",
+        long: "摆动高低点同步抬高，只考虑多头箱体。",
+        short: "摆动高低点同步降低，只考虑空头箱体。" },
+      { count: 18, title: "上下沿各至少三次独立测试",
+        long: "用连续已收盘 M5 K 线的最高与最低影线确定箱体边界。",
+        short: "用连续已收盘 M5 K 线的最高与最低影线确定箱体边界。" },
+      { count: 23, title: "同向收盘离箱后，开始等回踩",
+        long: "M5 收盘确认上破后，冻结箱体上下沿和中线。",
+        short: "M5 收盘确认下破后，冻结箱体上下沿和中线。" },
+      { count: 27, title: "回踩中线即可触发",
+        long: "Ask 进入中线带，风险检查通过后买入。",
+        short: "Bid 进入中线带，风险检查通过后卖出。" },
+      { count: 38, title: "新摆动确认后收紧止损",
+        long: "更高的摆动低点确认后，上移保护止损。",
+        short: "更低的摆动高点确认后，下移保护止损。" }
+    ];
+    const canvas = document.getElementById("chart");
+    const ctx = canvas.getContext("2d");
+    const steps = [...document.querySelectorAll("[data-stage]")];
+    const sides = [...document.querySelectorAll("[data-direction]")];
+    const previous = document.getElementById("prev");
+    const play = document.getElementById("play");
+    const next = document.getElementById("next");
+    const stepTitle = document.getElementById("step-title");
+    const stepText = document.getElementById("step-text");
+    const cursor = { step: 3, side: "long", clock: null };
+    const money = (price) => Number(price).toFixed(2);
+
+    function repaint() {
+      if (!ctx) return;
+      const { width, height } = canvas.getBoundingClientRect();
+      if (width < 1 || height < 1) return;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.round(width * dpr);
+      canvas.height = Math.round(height * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const x0 = 13;
+      const x1 = width - 66;
+      const y0 = 19;
+      const y1 = height - 16;
+      const spacing = (x1 - x0) / 39;
+      const x = (index) => x0 + (index + .55) * spacing;
+      const short = cursor.side === "short";
+      const price = (value) => short ? 4752 - value : value;
+      const low = short ? 2359 : 2366;
+      const high = short ? 2386 : 2393;
+      const y = (value) => y1 - (value - low) * (y1 - y0) / (high - low);
+
+      function line(ax, ay, bx, by, color, dash = []) {
+        ctx.beginPath();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1;
+        ctx.setLineDash(dash);
+        ctx.moveTo(ax, ay);
+        ctx.lineTo(bx, by);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+      function mark(px, py, color, radius) {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(px, py, radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      function tag(value, fill, ink, dash = []) {
+        const py = y(value);
+        line(x(6) - spacing / 2, py, x1 + 2, py, fill, dash);
+        ctx.fillStyle = fill;
+        ctx.fillRect(x1 + 2, py - 8, 61, 16);
+        ctx.font = "10px Consolas, monospace";
+        ctx.fillStyle = ink;
+        ctx.fillText(money(value), x1 + 7, py + 3.5);
+      }
+
+      ctx.fillStyle = "#11120f";
+      ctx.fillRect(0, 0, width, height);
+      for (let value = low + 1; value < high; value += 5) {
+        const py = y(value);
+        line(x0, py, x1, py, "#2c2a24", [2, 5]);
+        const overlapsMidpoint = cursor.step >= 1 && Math.abs(py - y(2376)) < 14;
+        const overlapsStop = cursor.step >= 3 && Math.abs(py - y(price(2369))) < 14;
+        if (!overlapsMidpoint && !overlapsStop) {
+          ctx.font = "10px Consolas, monospace";
+          ctx.fillStyle = "#8f8879";
+          ctx.fillText(money(value), x1 + 7, py + 3);
+        }
+      }
+      for (let i = 4; i < 39; i += 6) line(x(i), y0, x(i), y1, "#26251f", [2, 5]);
+
+      if (cursor.step >= 1) {
+        const left = x(6) - spacing / 2;
+        const boxRight = x(Math.max(17, view[cursor.step].count - 1)) + spacing / 2;
+        ctx.fillStyle = "#c9954720";
+        ctx.fillRect(left, y(2381), boxRight - left, y(2371) - y(2381));
+        ctx.fillStyle = "#eccc952c";
+        ctx.fillRect(left, y(2376.5), boxRight - left, y(2375.5) - y(2376.5));
+        line(left, y(2381), boxRight, y(2381), "#b68950");
+        line(left, y(2371), boxRight, y(2371), "#b68950");
+        line(left, y(2376), boxRight, y(2376), "#eccc95", [4, 4]);
+        tag(2376, "#eccc95", "#211811", [4, 4]);
+      }
+
+      for (let i = 0; i < view[cursor.step].count; i++) {
+        const [open, upper, lower, close] = samples[i].map(price);
+        const longCandle = close >= open;
+        const color = longCandle ? "#8cc6a9" : "#df9c8e";
+        const center = x(i);
+        const candle = Math.max(3, Math.min(10, spacing * .64));
+        line(center, y(upper), center, y(lower), color);
+        ctx.fillStyle = color;
+        ctx.fillRect(center - candle / 2, y(Math.max(open, close)), candle,
+          Math.max(1.2, Math.abs(y(open) - y(close))));
+      }
+      if (cursor.step >= 1) {
+        for (const i of [6, 10, 14]) mark(x(i), y(price(samples[i][2])), "#eccc95", 2.5);
+        for (const i of [8, 12, 16]) mark(x(i), y(price(samples[i][1])), "#eccc95", 2.5);
+      }
+      if (cursor.step >= 2) {
+        const py = y(price(2382.7));
+        mark(x(18), py, "#eccc95", 3.6);
+        line(x(18), py, x(18), py + (short ? 16 : -16), "#eccc95");
+      }
+      if (cursor.step >= 3) {
+        const entry = y(price(2376.2));
+        mark(x(24), entry, "#11120f", 5.7);
+        mark(x(24), entry, "#f5d69f", 3.6);
+        tag(price(2369), "#df9c8e", "#24130f", [4, 4]);
+      }
+      if (cursor.step >= 4) {
+        const protection = price(2376.3);
+        const pos = y(protection);
+        line(x(32), pos, x1, pos, "#f1bc9d", [3, 3]);
+        mark(x(32), pos, "#f1bc9d", 3.6);
+      }
+    }
+
+    function pause() {
+      if (cursor.clock !== null) window.clearInterval(cursor.clock);
+      cursor.clock = null;
+      play.textContent = "播放";
+    }
+
+    function select(index) {
+      cursor.step = Math.min(view.length - 1, Math.max(0, index));
+      const scene = view[cursor.step];
+      stepTitle.textContent = scene.title;
+      stepText.textContent = scene[cursor.side];
+      canvas.setAttribute("aria-label", `模拟黄金 K 线。当前步骤，${scene.title}。${scene[cursor.side]}`);
+      steps.forEach((button, number) => {
+        if (number === cursor.step) button.setAttribute("aria-current", "step");
+        else button.removeAttribute("aria-current");
+      });
+      previous.disabled = cursor.step === 0;
+      next.disabled = cursor.step === view.length - 1;
+      repaint();
+    }
+    steps.forEach((button) => button.addEventListener("click", () => {
+      pause();
+      select(Number(button.dataset.stage));
+    }));
+    sides.forEach((button) => button.addEventListener("click", () => {
+      pause();
+      cursor.side = button.dataset.direction;
+      sides.forEach((option) => option.setAttribute("aria-pressed", String(option === button)));
+      select(cursor.step);
+    }));
+    previous.addEventListener("click", () => { pause(); select(cursor.step - 1); });
+    next.addEventListener("click", () => { pause(); select(cursor.step + 1); });
+    play.addEventListener("click", () => {
+      if (cursor.clock !== null) {
+        pause();
+        return;
+      }
+      select(0);
+      play.textContent = "暂停";
+      cursor.clock = window.setInterval(() => {
+        select(cursor.step + 1);
+        if (cursor.step === view.length - 1) pause();
+      }, 1800);
+    });
+    if ("ResizeObserver" in window) new ResizeObserver(repaint).observe(canvas);
+    else window.addEventListener("resize", repaint);
+    select(cursor.step);
+  </script>
+</body>
+</html>
